@@ -1,0 +1,48 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  position: relative;
+  z-index: 200;
+  background: var(--bg-card);
+}
+
+.rightActions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.deleteButton {
+  color: #ef4444 !important;
+}
+
+.deleteButton:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+}

@@ -1,0 +1,197 @@
+/* CSS Variables - 暗色主题 */
+:root {
+  --bg-primary: rgba(10, 10, 15, 0.85);
+  --bg-card: rgba(15, 15, 20, 0.75);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-active: rgba(255, 255, 255, 0.12);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  --text-primary: #ffffff;
+  --text-secondary: #d0d0d8;
+  --text-muted: #a0a0b0;
+  --text-clock: #ffffff;
+
+  /* 默认主题色 */
+  --accent-primary: #f59e0b;
+  --accent-secondary: #d97706;
+
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  --card-hover-border: rgba(255, 255, 255, 0.15);
+
+  /* 背景遮罩 */
+  --overlay-color: #0a0a0f;
+  --gradient-overlay: linear-gradient(
+    to bottom,
+    rgba(10, 10, 15, 0.3) 0%,
+    rgba(10, 10, 15, 0.5) 50%,
+    rgba(10, 10, 15, 0.7) 100%
+  );
+
+  /* 圆角 - 可配置 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* 组件统一尺寸 */
+  --control-height: 32px;
+  --control-height-sm: 28px;
+  --control-font-size: 13px;
+  --control-padding-x: 10px;
+
+  --transition: all 0.2s ease;
+}
+
+/* 亮色主题 - 毛玻璃 + 微灰调 */
+[data-theme="light"] {
+  --bg-primary: rgba(245, 245, 250, 0.7);
+  --bg-card: rgba(255, 255, 255, 0.65);
+  --bg-hover: rgba(255, 255, 255, 0.85);
+  --bg-active: rgba(255, 255, 255, 0.95);
+  --bg-overlay: rgba(255, 255, 255, 0.2);
+
+  /* 文字对比度提高 */
+  --text-primary: rgba(15, 23, 42, 0.9);
+  --text-secondary: rgba(51, 65, 85, 0.8);
+  --text-muted: rgba(100, 116, 139, 0.7);
+  --text-clock: #334155;
+
+  /* 边框用深色半透明，增加可见度 */
+  --border-color: rgba(0, 0, 0, 0.08);
+  /* 阴影增强立体感 */
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.08),
+            0 1px 2px rgba(0, 0, 0, 0.04);
+  --text-shadow: none;
+  --card-hover-border: rgba(0, 0, 0, 0.12);
+
+  /* 亮色模式 - 轻遮罩 */
+  --overlay-color: rgba(255, 255, 255, 0.15);
+  --gradient-overlay: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+}
+
+/* Reset */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: #0a0a0f;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* Link */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Button Reset */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+/* Input Reset */
+input,
+textarea,
+select {
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+/* List Reset */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Image */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Utility Classes */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

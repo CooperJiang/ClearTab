@@ -1,0 +1,201 @@
+.engineGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.engineCardWrapper {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.engineCardWrapper:hover .deleteCustomButton {
+  opacity: 1;
+}
+
+.deleteCustomButton {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.9);
+  border-radius: 50%;
+  color: white;
+  opacity: 0;
+  transition: var(--transition);
+  z-index: 1;
+}
+
+.deleteCustomButton:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.engineCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: var(--transition);
+  cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.engineCard:hover:not(.disabled) {
+  border-color: var(--text-muted);
+}
+
+.engineCard.selected {
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+}
+
+.engineCard.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--text-muted);
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.engineCard.selected .checkbox {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.engineIcon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border-radius: 6px;
+  overflow: hidden;
+  color: var(--text-muted);
+}
+
+.engineIcon img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.engineInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.engineName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.engineCard.selected .engineName {
+  color: var(--accent-primary);
+}
+
+.engineUrl {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 自定义搜索引擎 */
+.customSection {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.customTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.customInputRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customInputWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.globeIcon {
+  flex-shrink: 0;
+  color: var(--accent-primary);
+}
+
+.customInput {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: transparent;
+  min-width: 0;
+}
+
+.customInput::placeholder {
+  color: var(--text-muted);
+}
+
+.customSaveButton {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-primary);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.customSaveButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.customSaveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

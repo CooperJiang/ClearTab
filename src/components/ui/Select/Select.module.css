@@ -1,0 +1,120 @@
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  width: 100%;
+  height: var(--control-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 var(--control-padding-x);
+  font-size: var(--control-font-size);
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.trigger:hover {
+  border-color: var(--accent-primary);
+}
+
+.trigger.open {
+  border-color: var(--accent-primary);
+}
+
+.selectedLabel {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+  animation: fadeIn 0.15s ease;
+}
+
+.dropdown.dropUp {
+  animation: fadeInUp 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.option {
+  width: 100%;
+  height: var(--control-height);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--control-padding-x);
+  font-size: var(--control-font-size);
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: left;
+}
+
+.option:hover {
+  background: var(--bg-hover);
+}
+
+.option.selected {
+  background: rgba(var(--accent-primary-rgb), 0.1);
+}
+
+.optionLabel {
+  font-weight: 500;
+  flex: 1;
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  color: var(--accent-primary);
+}

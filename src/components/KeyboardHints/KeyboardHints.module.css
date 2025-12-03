@@ -1,0 +1,44 @@
+.container {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  gap: 12px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  z-index: 50;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.container:hover {
+  opacity: 0.8;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: inherit;
+  color: var(--text-muted);
+}

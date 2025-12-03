@@ -1,0 +1,126 @@
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container {
+  margin-bottom: 16px;
+  animation: fadeInUp 0.5s ease 0.15s backwards;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-shadow: var(--text-shadow);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.link:hover {
+  background: var(--bg-hover);
+  border-color: var(--card-hover-border);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.iconLetter {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px dashed var(--text-muted);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.addButton:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* 拖拽样式 */
+.link.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.link.dragOver {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+/* 外部拖入时的高亮 */
+.container.dropZoneActive {
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  border-radius: var(--radius-md);
+  outline: 2px dashed var(--accent-primary);
+  outline-offset: -2px;
+}

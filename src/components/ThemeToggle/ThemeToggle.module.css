@@ -1,0 +1,21 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+}

@@ -1,0 +1,295 @@
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  animation: fadeInUp 0.5s ease 0.2s backwards;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.categories {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 6px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.categoryTab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.categoryTab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.categoryTab.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.count {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.searchBox:focus-within {
+  border-color: var(--accent-primary);
+}
+
+.searchIcon {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.searchIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.searchInput {
+  width: 120px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.clearSearch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: var(--bg-hover);
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.clearSearch:hover {
+  background: var(--text-muted);
+  color: var(--bg-card);
+}
+
+.clearSearch svg {
+  width: 10px;
+  height: 10px;
+}
+
+.addCategoryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.addCategoryButton:hover {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.actionButton:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.actionButton svg {
+  width: 14px;
+  height: 14px;
+}
+
+.gridWrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-right: -8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  padding-bottom: 16px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.card:hover {
+  background: var(--bg-hover);
+  border-color: var(--card-hover-border);
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domain {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+}
+
+.empty p {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.empty span {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* 分类拖拽样式 */
+.categoryTab.dragging {
+  opacity: 0.5;
+}
+
+.categoryTab.dragOver {
+  background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  border: 1px dashed var(--accent-primary);
+}
+
+/* 书签卡片拖拽样式 */
+.card.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.card.dragOver {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}

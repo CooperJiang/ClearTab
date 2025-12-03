@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Cleartab New Tab",
+  "version": "1.0.0",
+  "description": "简洁高效的新标签页 - 书签管理、快捷访问、多搜索引擎",
+  "permissions": [
+    "storage",
+    "bookmarks",
+    "topSites"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

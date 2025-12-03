@@ -1,0 +1,25 @@
+.quote {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  max-width: 320px;
+  text-align: right;
+}
+
+.text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.source {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}

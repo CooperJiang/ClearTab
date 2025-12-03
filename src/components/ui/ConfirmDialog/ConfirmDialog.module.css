@@ -1,0 +1,18 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

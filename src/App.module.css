@@ -1,0 +1,126 @@
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 50px;
+  min-height: 0;
+}
+
+/* 入场动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.topLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+
+.topRight {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.heroSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 32px;
+  position: relative;
+  z-index: 10;
+  animation: fadeInUp 0.5s ease 0.05s backwards;
+}
+
+.logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 50%, var(--text-primary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s ease-in-out infinite;
+  text-shadow: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
+
+.searchWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  animation: fadeInUp 0.5s ease 0.1s backwards;
+}
+
+@media (max-width: 1200px) {
+  .main {
+    padding: 24px 32px;
+  }
+
+  .logo {
+    font-size: 36px;
+    letter-spacing: 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 16px;
+  }
+
+  .topBar {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .logo {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+}

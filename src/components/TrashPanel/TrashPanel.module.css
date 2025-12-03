@@ -1,0 +1,256 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 设置区域 */
+.settingsSection {
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 14px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.settingItem:first-of-type {
+  padding-top: 0;
+}
+
+.settingItem:last-of-type {
+  padding-bottom: 0;
+}
+
+.settingLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.settingLabel > span:first-child {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.settingDesc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.selectWrapper {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+/* 回收站内容区域 */
+.trashSection {
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.trashHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.trashHeader .sectionTitle {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 空状态 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.emptyState svg {
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* 回收站列表 */
+.trashList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 按天分组 */
+.dayGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.dayLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dayCount {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.restoreGroupButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.restoreGroupButton:hover {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.dayItems {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trashItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.trashItem:hover {
+  border-color: var(--accent-primary);
+}
+
+.itemInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.itemDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemMeta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.restoreButton,
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.restoreButton:hover {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.deleteButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}

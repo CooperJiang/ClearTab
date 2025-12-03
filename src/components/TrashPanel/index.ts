@@ -1,0 +1,1 @@
+export { TrashPanel } from './TrashPanel';

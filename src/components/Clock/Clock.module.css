@@ -1,0 +1,22 @@
+.clock {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+
+.time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 4.5rem;
+  font-weight: 600;
+  letter-spacing: -2px;
+  color: var(--text-clock);
+  text-shadow: var(--text-shadow);
+  line-height: 1;
+}
+
+.date {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-shadow: var(--text-shadow);
+}

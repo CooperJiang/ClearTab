@@ -1,0 +1,1 @@
+export { RecentVisits } from './RecentVisits';

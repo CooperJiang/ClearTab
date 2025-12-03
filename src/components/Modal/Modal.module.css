@@ -1,0 +1,136 @@
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: overlayFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.overlay.closing {
+  animation: overlayFadeOut 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 90%;
+  max-width: 680px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.modal.closing {
+  animation: modalSlideOut 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 小尺寸弹窗 */
+.modal.small {
+  max-width: 420px;
+}
+
+/* 大尺寸弹窗 */
+.modal.large {
+  max-width: 800px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
