@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal } from '../Modal';
-import { ALL_SEARCH_ENGINES, getAllEngines, type SearchEngine } from '../../types';
+import { getAllEngines, type SearchEngine } from '../../types';
 import { useSettingsStore } from '../../stores';
 import styles from './SearchEngineModal.module.css';
 

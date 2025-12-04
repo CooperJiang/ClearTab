@@ -6,10 +6,25 @@
   "permissions": [
     "storage",
     "bookmarks",
-    "topSites"
+    "topSites",
+    "history",
+    "contextMenus",
+    "activeTab"
   ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "chrome_url_overrides": {
     "newtab": "index.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cleartab-newtab@example.com",
+      "strict_min_version": "109.0"
+    }
   },
   "icons": {
     "16": "icons/icon16.png",

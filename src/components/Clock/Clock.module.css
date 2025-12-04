@@ -5,10 +5,10 @@
 }
 
 .time {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 4.5rem;
-  font-weight: 600;
-  letter-spacing: -2px;
+  font-weight: 500;
+  letter-spacing: normal;
   color: var(--text-clock);
   text-shadow: var(--text-shadow);
   line-height: 1;

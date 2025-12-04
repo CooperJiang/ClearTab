@@ -10,6 +10,7 @@ interface BookmarkState {
   activeCategory: string;
   isInitialized: boolean;
   mockDataVersion: number;
+  collapsedCategories: Set<string>;
 
   // Actions
   addBookmark: (bookmark: Bookmark) => void;
@@ -22,6 +23,7 @@ interface BookmarkState {
   deleteCategory: (id: string) => void;
   reorderCategories: (categories: Category[]) => void;
   incrementVisitCount: (id: string) => void;
+  toggleCategoryCollapse: (categoryId: string) => void;
   initializeWithMockData: () => void;
 }
 
@@ -36,6 +38,7 @@ export const useBookmarkStore = create<BookmarkState>()(
       activeCategory: 'all',
       isInitialized: false,
       mockDataVersion: MOCK_DATA_VERSION,
+      collapsedCategories: new Set<string>(),
 
       addBookmark: (bookmark) =>
         set((state) => ({
@@ -90,6 +93,17 @@ export const useBookmarkStore = create<BookmarkState>()(
           ),
         })),
 
+      toggleCategoryCollapse: (categoryId) =>
+        set((state) => {
+          const newCollapsed = new Set(state.collapsedCategories);
+          if (newCollapsed.has(categoryId)) {
+            newCollapsed.delete(categoryId);
+          } else {
+            newCollapsed.add(categoryId);
+          }
+          return { collapsedCategories: newCollapsed };
+        }),
+
       initializeWithMockData: () => {
         const state = get();
         // 如果 mock 数据版本更新了，或者没有初始化过且没有书签，则加载 mock 数据
@@ -104,6 +118,31 @@ export const useBookmarkStore = create<BookmarkState>()(
     }),
     {
       name: 'newtab-bookmarks',
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          const data = JSON.parse(str);
+          return {
+            ...data,
+            state: {
+              ...data.state,
+              collapsedCategories: new Set(data.state?.collapsedCategories || []),
+            },
+          };
+        },
+        setItem: (name, value) => {
+          const data = {
+            ...value,
+            state: {
+              ...value.state,
+              collapsedCategories: Array.from(value.state?.collapsedCategories || []),
+            },
+          };
+          localStorage.setItem(name, JSON.stringify(data));
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
     }
   )
 );

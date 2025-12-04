@@ -1,3 +1,5 @@
+/* 字体已在 index.html 中通过 link 标签加载 */
+
 /* CSS Variables - 暗色主题 */
 :root {
   --bg-primary: rgba(10, 10, 15, 0.85);
@@ -44,29 +46,32 @@
   --transition: all 0.2s ease;
 }
 
-/* 亮色主题 - 毛玻璃 + 微灰调 */
-[data-theme="light"] {
-  --bg-primary: rgba(245, 245, 250, 0.7);
-  --bg-card: rgba(255, 255, 255, 0.65);
-  --bg-hover: rgba(255, 255, 255, 0.85);
-  --bg-active: rgba(255, 255, 255, 0.95);
+/* 亮色主题 - 精致优化 */
+[data-theme='light'] {
+  /* 基础背景：使用非常淡的灰度色，减少刺眼感，并与白色卡片拉开层次 */
+  --bg-primary: rgba(248, 249, 250, 0.7);
+  /* 卡片背景：保持纯净的白色，但透明度稍作调整 */
+  --bg-card: rgba(255, 255, 255, 0.75);
+  /* 悬停/激活颜色：使用更纯净的白色，增加透明度以示区分 */
+  --bg-hover: rgba(255, 255, 255, 0.9);
+  --bg-active: rgba(255, 255, 255, 1);
   --bg-overlay: rgba(255, 255, 255, 0.2);
 
-  /* 文字对比度提高 */
-  --text-primary: rgba(15, 23, 42, 0.9);
-  --text-secondary: rgba(51, 65, 85, 0.8);
-  --text-muted: rgba(100, 116, 139, 0.7);
-  --text-clock: #334155;
+  /* 文字颜色：使用更柔和的深灰色系（Slate），代替纯黑，提升阅读舒适度 */
+  --text-primary: #334155; /* slate-700 */
+  --text-secondary: #64748b; /* slate-500 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --text-clock: #334155; /* slate-700 */
 
-  /* 边框用深色半透明，增加可见度 */
-  --border-color: rgba(0, 0, 0, 0.08);
-  /* 阴影增强立体感 */
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.08),
-            0 1px 2px rgba(0, 0, 0, 0.04);
+  /* 边框：使用更深的半透明色，让轮廓在淡色背景上更清晰 */
+  --border-color: rgba(0, 0, 0, 0.07);
+  /* 阴影：重新设计，使用更深、更柔和的阴影，营造高级感 */
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --text-shadow: none;
-  --card-hover-border: rgba(0, 0, 0, 0.12);
+  --card-hover-border: rgba(0, 0, 0, 0.1);
 
-  /* 亮色模式 - 轻遮罩 */
+  /* 亮色模式遮罩 */
   --overlay-color: rgba(255, 255, 255, 0.15);
   --gradient-overlay: linear-gradient(
     to bottom,
@@ -194,4 +199,20 @@ img {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Animations */
+@keyframes stagger-fade-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.stagger-fade-in {
+  animation: stagger-fade-in 0.5s ease-out backwards;
 }

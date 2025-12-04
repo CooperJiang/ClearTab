@@ -8,13 +8,17 @@ export function Background() {
   // 优先级：随机壁纸 > 自定义壁纸 > 默认壁纸
   const getBackgroundImage = () => {
     if (settings.themeMode === 'light') {
-      return settings.randomWallpaperImageLight
+      const bg = settings.randomWallpaperImageLight
         || settings.customBackgroundImageLight
         || settings.backgroundImageLight;
+      console.log('[Background] Light mode image:', bg);
+      return bg;
     }
-    return settings.randomWallpaperImage
+    const bg = settings.randomWallpaperImage
       || settings.customBackgroundImage
       || settings.backgroundImage;
+    console.log('[Background] Dark mode image:', bg);
+    return bg;
   };
 
   // 根据主题模式获取模糊值

@@ -1,14 +1,16 @@
 import { useState, useRef, useCallback } from 'react';
-import { useQuickLinkStore } from '../../stores';
-import { getFaviconUrl } from '../../utils';
+import { useQuickLinkStore, useRecentVisitsStore, useSettingsStore } from '../../stores';
 import { useTranslation } from '../../i18n';
 import { EditModal, type EditModalField } from '../EditModal';
 import { ContextMenu, type ContextMenuItem } from '../ui';
+import { FaviconImage } from '../FaviconImage';
 import { COLORS } from '../../types';
 import styles from './QuickLinks.module.css';
 
 export function QuickLinks() {
   const { quickLinks, addQuickLink, updateQuickLink, deleteQuickLink, reorderQuickLinks } = useQuickLinkStore();
+  const addVisit = useRecentVisitsStore((state) => state.addVisit);
+  const recentVisitsMode = useSettingsStore((state) => state.settings.recentVisitsMode);
   const { t } = useTranslation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<string | null>(null);
@@ -159,6 +161,13 @@ export function QuickLinks() {
     }
   }, [quickLinks, addQuickLink]);
 
+  // 点击链接时记录访问
+  const handleLinkClick = useCallback((title: string, url: string) => {
+    if (recentVisitsMode === 'custom') {
+      addVisit(url, title);
+    }
+  }, [recentVisitsMode, addVisit]);
+
   // 右键菜单项
   const getContextMenuItems = (linkId: string): ContextMenuItem[] => [
     {
@@ -223,12 +232,13 @@ export function QuickLinks() {
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
+              onClick={() => handleLinkClick(link.title, link.url)}
             >
               <div className={styles.icon}>
                 {link.icon ? (
                   <img src={link.icon} alt="" />
                 ) : (
-                  <img src={getFaviconUrl(link.url)} alt="" />
+                  <FaviconImage url={link.url} title={link.title} color={link.color} size={16} />
                 )}
               </div>
               <span className={styles.name}>{link.title}</span>

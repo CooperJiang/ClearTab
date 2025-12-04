@@ -12,14 +12,20 @@ interface SelectProps {
   options: SelectOption[];
   onChange: (value: string) => void;
   placeholder?: string;
+  width?: number | string;
 }
 
-export function Select({ value, options, onChange, placeholder }: SelectProps) {
+export function Select({ value, options, onChange, placeholder, width }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0, dropUp: false });
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const selectedOption = options.find(opt => opt.value === value);
+
+  // 计算容器宽度样式
+  const containerStyle = width
+    ? { width: typeof width === 'number' ? `${width}px` : width }
+    : undefined;
 
   // 计算下拉框位置
   const updatePosition = () => {
@@ -79,7 +85,7 @@ export function Select({ value, options, onChange, placeholder }: SelectProps) {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={containerStyle}>
       <button
         ref={triggerRef}
         type="button"

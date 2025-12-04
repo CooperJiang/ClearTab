@@ -26,8 +26,15 @@
 
 .list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
 }
 
 .item {
@@ -41,6 +48,9 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   transition: var(--transition);
+  flex-shrink: 0;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 .item:hover {
@@ -81,6 +91,9 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 拖拽时的样式 */
@@ -90,4 +103,32 @@
 
 .item[draggable="true"] {
   cursor: grab;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+.skeleton .icon {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.skeleton .name {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  width: 40px;
+  height: 13px;
+}
+
+@keyframes skeleton-loading {
+  0%, 100% {
+    background-color: var(--bg-card);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
 }

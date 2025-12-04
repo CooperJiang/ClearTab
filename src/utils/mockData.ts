@@ -1,5 +1,5 @@
 import type { Bookmark, QuickLink } from '../types';
-import { generateId, getRandomColor } from './helpers';
+import { generateId } from './helpers';
 
 // 示例书签数据
 export const MOCK_BOOKMARKS: Bookmark[] = [

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Background,
   Clock,
@@ -13,9 +13,14 @@ import {
   SettingsDrawer,
   WallpaperButton,
   GlobalSearch,
+  EditModal,
+  type EditModalField,
+  ToastContainer,
 } from './components';
 import { useSettingsStore, useBookmarkStore, useQuickLinkStore } from './stores';
+import { useKeyboardShortcuts, type KeyboardShortcut } from './hooks';
 import { fetchRandomWallpaper } from './utils/wallpaperApi';
+import { COLORS } from './types';
 import { I18nProvider, type Locale } from './i18n';
 import './styles/globals.css';
 import styles from './App.module.css';
@@ -23,22 +28,78 @@ import styles from './App.module.css';
 function App() {
   const { settings, updateSettings } = useSettingsStore();
   const initializeBookmarks = useBookmarkStore((state) => state.initializeWithMockData);
+  const addBookmark = useBookmarkStore((state) => state.addBookmark);
+  const categories = useBookmarkStore((state) => state.categories);
   const initializeQuickLinks = useQuickLinkStore((state) => state.initializeWithMockData);
+  const quickLinks = useQuickLinkStore((state) => state.quickLinks);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAddBookmarkOpen, setIsAddBookmarkOpen] = useState(false);
 
-  // 全局快捷键 Command+K
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(true);
-      }
-    };
+  // 切换主题
+  const toggleTheme = useCallback(() => {
+    const newTheme = settings.themeMode === 'dark' ? 'light' : 'dark';
+    updateSettings({ themeMode: newTheme });
+  }, [settings.themeMode, updateSettings]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // 打开快捷链接
+  const openQuickLink = useCallback((index: number) => {
+    if (index >= 0 && index < quickLinks.length) {
+      window.open(quickLinks[index].url, '_blank');
+    }
+  }, [quickLinks]);
+
+  // 键盘快捷键配置
+  const shortcuts: KeyboardShortcut[] = useMemo(() => [
+    // ⌘/Ctrl + K : 打开全局搜索
+    {
+      key: 'k',
+      ctrl: true,
+      action: () => setIsSearchOpen(true),
+      description: '全局搜索',
+    },
+    // ⌘/Ctrl + , : 打开设置
+    {
+      key: ',',
+      ctrl: true,
+      action: () => setIsSettingsOpen(true),
+      description: '打开设置',
+    },
+    // ⌘/Ctrl + D : 切换主题
+    {
+      key: 'd',
+      ctrl: true,
+      action: toggleTheme,
+      description: '切换主题',
+    },
+    // ⌘/Ctrl + B : 添加书签
+    {
+      key: 'b',
+      ctrl: true,
+      action: () => setIsAddBookmarkOpen(true),
+      description: '添加书签',
+    },
+    // Escape : 关闭弹窗
+    {
+      key: 'Escape',
+      action: () => {
+        setIsSearchOpen(false);
+        setIsSettingsOpen(false);
+        setIsAddBookmarkOpen(false);
+      },
+      description: '关闭弹窗',
+    },
+    // 数字键 1-9 : 快速打开快捷链接
+    ...Array.from({ length: 9 }, (_, i) => ({
+      key: String(i + 1),
+      alt: true,
+      action: () => openQuickLink(i),
+      description: `打开快捷链接 ${i + 1}`,
+    })),
+  ], [toggleTheme, openQuickLink]);
+
+  // 使用键盘快捷键 Hook
+  useKeyboardShortcuts({ shortcuts });
 
   // 首次加载时初始化示例数据
   useEffect(() => {
@@ -79,17 +140,23 @@ function App() {
 
   // 获取随机壁纸 URL
   const getRandomWallpaperUrl = async () => {
-    const wallpaper = await fetchRandomWallpaper();
+    if (!settings.pixelPunkApiUrl) {
+      throw new Error('PixelPunk API URL not configured');
+    }
+    const wallpaper = await fetchRandomWallpaper(settings.pixelPunkApiUrl);
     return wallpaper.url;
   };
 
   // 应用随机壁纸
   const applyRandomWallpaper = (url: string) => {
     const isDark = settings.themeMode === 'dark';
+    console.log('[App] Applying wallpaper, isDark:', isDark, 'url:', url);
     if (isDark) {
       updateSettings({ randomWallpaperImage: url });
+      console.log('[App] Updated randomWallpaperImage');
     } else {
       updateSettings({ randomWallpaperImageLight: url });
+      console.log('[App] Updated randomWallpaperImageLight');
     }
   };
 
@@ -97,6 +164,47 @@ function App() {
   const handleLocaleChange = (locale: Locale) => {
     updateSettings({ locale });
   };
+
+  // 快捷键添加书签的表单字段
+  const bookmarkFields: EditModalField[] = useMemo(() => [
+    {
+      key: 'title',
+      label: '标题',
+      type: 'text',
+      placeholder: '输入书签标题',
+      required: true,
+    },
+    {
+      key: 'url',
+      label: '网址',
+      type: 'url',
+      placeholder: '输入网址',
+      required: true,
+    },
+    {
+      key: 'categoryId',
+      label: '分类',
+      type: 'select',
+      options: categories
+        .filter((c) => c.id !== 'all')
+        .map((c) => ({ value: c.id, label: c.name })),
+      required: true,
+    },
+  ], [categories]);
+
+  // 处理快捷键添加书签
+  const handleAddBookmark = useCallback((values: Record<string, string>) => {
+    const newBookmark = {
+      id: `bm-${Date.now()}`,
+      title: values.title,
+      url: values.url.startsWith('http') ? values.url : `https://${values.url}`,
+      categoryId: values.categoryId || 'dev',
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      createdAt: Date.now(),
+      visitCount: 0,
+    };
+    addBookmark(newBookmark);
+  }, [addBookmark]);
 
   return (
     <I18nProvider locale={settings.locale} onLocaleChange={handleLocaleChange}>
@@ -106,17 +214,26 @@ function App() {
       <main className={styles.main}>
         {/* 顶部栏：左侧时钟，右侧主题切换 + 每日一言 */}
         <div className={styles.topBar}>
-          <div className={styles.topLeft}>
+          <div
+            className={`${styles.topLeft} stagger-fade-in`}
+            style={{ animationDelay: '0.1s' }}
+          >
             {settings.showClock && <Clock />}
           </div>
-          <div className={styles.topRight}>
+          <div
+            className={`${styles.topRight} stagger-fade-in`}
+            style={{ animationDelay: '0.2s' }}
+          >
             {settings.showQuote && <Quote />}
             {settings.showThemeToggle && <ThemeToggle />}
           </div>
         </div>
 
         {/* 核心区域：Logo + 搜索框 */}
-        <div className={styles.heroSection}>
+        <div
+          className={`${styles.heroSection} stagger-fade-in`}
+          style={{ animationDelay: '0.3s' }}
+        >
           <h1 className={styles.logo}>Cleartab</h1>
           <div className={styles.searchWrapper}>
             <SearchBar />
@@ -124,7 +241,10 @@ function App() {
         </div>
 
         {/* 内容区域 */}
-        <div className={styles.content}>
+        <div
+          className={`${styles.content} stagger-fade-in`}
+          style={{ animationDelay: '0.4s' }}
+        >
           {settings.showRecentVisits && <RecentVisits />}
           {settings.showQuickLinks && <QuickLinks />}
           {settings.showBookmarks && <BookmarkGrid />}
@@ -141,6 +261,19 @@ function App() {
       <SettingsButton onClick={() => setIsSettingsOpen(true)} />
       <SettingsDrawer isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {/* 快捷键添加书签弹窗 */}
+      <EditModal
+        isOpen={isAddBookmarkOpen}
+        onClose={() => setIsAddBookmarkOpen(false)}
+        title="添加书签"
+        fields={bookmarkFields}
+        initialValues={{ categoryId: 'dev' }}
+        onSave={handleAddBookmark}
+      />
+
+      {/* 通知容器 */}
+      <ToastContainer />
     </div>
     </I18nProvider>
   );

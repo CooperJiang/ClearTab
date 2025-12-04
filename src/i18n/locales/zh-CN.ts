@@ -136,6 +136,28 @@ export const zhCN: TranslationSchema = {
 
   recentVisits: {
     title: '最近访问',
+    settings: {
+      title: '最近访问设置',
+      count: '显示数量',
+      mode: '记录模式',
+      modeCustom: '自定义跟踪',
+      modeChrome: 'Chrome 历史',
+      customDesc: '自定义跟踪：仅记录从本页面点击的链接',
+      chromeDesc: 'Chrome 历史：读取浏览器完整历史记录',
+    },
+  },
+
+  bookmarkGrouping: {
+    title: '书签分组显示',
+    description: '启用后，书签将按分类折叠显示；禁用后显示为传统网格视图',
+  },
+
+  bookmarkMode: {
+    title: '书签模式',
+    chrome: 'Chrome 同步',
+    local: '本地管理',
+    chromeDesc: '使用 Chrome 浏览器的书签，支持多设备同步',
+    localDesc: '使用本地管理的书签，所有数据存储在浏览器本地',
   },
 
   quotes: {
@@ -156,5 +178,12 @@ export const zhCN: TranslationSchema = {
 
   wallpaperButton: {
     tooltip: '切换随机壁纸',
+  },
+
+  toast: {
+    wallpaperLoadSuccess: '壁纸更新成功',
+    wallpaperLoadError: '获取壁纸失败',
+    wallpaperLoadTimeout: '壁纸加载超时',
+    wallpaperApiNotConfigured: 'PixelPunk API 未配置',
   },
 };

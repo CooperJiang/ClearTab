@@ -1,29 +1,51 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
-import { useBookmarkStore, useTrashStore } from '../../stores';
-import { getFaviconUrl, getDomain } from '../../utils';
+import { motion } from 'framer-motion';
+import { useBookmarkAdapter } from '../../hooks/useBookmarkAdapter';
+import { useTrashStore, useSettingsStore, useBookmarkStore, useRecentVisitsStore } from '../../stores';
+import { getDomain } from '../../utils';
 import { Button, ContextMenu, ConfirmDialog, type ContextMenuItem } from '../ui';
 import { EditModal, type EditModalField } from '../EditModal';
+import { FaviconImage } from '../FaviconImage';
 import { useTranslation } from '../../i18n';
-import { COLORS } from '../../types';
 import styles from './BookmarkGrid.module.css';
 
 export function BookmarkGrid() {
+  const { settings } = useSettingsStore();
+  const { addToTrash } = useTrashStore();
+  const addVisit = useRecentVisitsStore((state) => state.addVisit);
+  const { t } = useTranslation();
+
+  // 使用统一的适配器 Hook 处理 Chrome 或本地书签模式
   const {
+    mode,
     bookmarks,
     categories,
+    isLoading,
+    error,
+    addBookmark: adapterAddBookmark,
+    deleteBookmark: adapterDeleteBookmark,
+    updateBookmark: adapterUpdateBookmark,
+    renameCategory: adapterRenameCategory,
+    deleteChromeCategoryFolder,
+    addChromeCategory,
+    moveBookmarkToCategory,
+    reorderCategories: adapterReorderCategories,
+    reorderBookmarks: adapterReorderBookmarks,
+  } = useBookmarkAdapter();
+
+  // 本地模式下获取额外的功能（分类管理、拖拽等）
+  const localStore = useBookmarkStore();
+  const {
     activeCategory,
+    collapsedCategories,
     setActiveCategory,
+    toggleCategoryCollapse,
     incrementVisitCount,
-    addBookmark,
-    updateBookmark,
-    deleteBookmark,
-    reorderBookmarks,
     addCategory,
     deleteCategory,
     reorderCategories,
-  } = useBookmarkStore();
-  const { addToTrash } = useTrashStore();
-  const { t } = useTranslation();
+    reorderBookmarks,
+  } = localStore;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -69,36 +91,82 @@ export function BookmarkGrid() {
     return result;
   }, [bookmarks, activeCategory, searchQuery]);
 
+  // 按分类分组的书签（仅在"全部"模式下使用，且启用了分组功能）
+  const groupedBookmarks = useMemo(() => {
+    if (!settings.enableBookmarkGrouping || activeCategory !== 'all' || searchQuery.trim()) {
+      return null;
+    }
+
+    const groups = new Map<string, typeof bookmarks>();
+    const categoryOrder = categories.filter(c => c.id !== 'all').map(c => c.id);
+
+    for (const bookmark of bookmarks) {
+      const catId = bookmark.categoryId;
+      if (!groups.has(catId)) {
+        groups.set(catId, []);
+      }
+      groups.get(catId)!.push(bookmark);
+    }
+
+    // 按分类顺序返回
+    return categoryOrder
+      .filter(catId => groups.has(catId))
+      .map(catId => ({
+        categoryId: catId,
+        categoryName: categories.find(c => c.id === catId)?.name || catId,
+        bookmarks: groups.get(catId)!,
+      }));
+  }, [bookmarks, categories, activeCategory, searchQuery, settings.enableBookmarkGrouping]);
+
   const handleBookmarkClick = (id: string) => {
-    incrementVisitCount(id);
+    // 仅在本地模式下跟踪访问计数
+    if (mode === 'local') {
+      incrementVisitCount(id);
+    }
+
+    // 自定义模式下记录最近访问
+    if (settings.recentVisitsMode === 'custom') {
+      const bookmark = bookmarks.find((b) => b.id === id);
+      if (bookmark) {
+        addVisit(bookmark.url, bookmark.title);
+      }
+    }
   };
 
-  // 书签表单字段
-  const bookmarkFields: EditModalField[] = [
-    {
-      key: 'title',
-      label: t.bookmarks.form.title,
-      type: 'text',
-      placeholder: t.bookmarks.form.title,
-      required: true,
-    },
-    {
-      key: 'url',
-      label: t.bookmarks.form.url,
-      type: 'url',
-      placeholder: t.bookmarks.form.url,
-      required: true,
-    },
-    {
-      key: 'categoryId',
-      label: t.bookmarks.form.category,
-      type: 'select',
-      options: categories
-        .filter((c) => c.id !== 'all')
-        .map((c) => ({ value: c.id, label: c.name })),
-      required: true,
-    },
-  ];
+  // 书签表单字段（根据模式动态生成）
+  const bookmarkFields = useMemo(() => {
+    const fields: EditModalField[] = [
+      {
+        key: 'title',
+        label: t.bookmarks.form.title,
+        type: 'text',
+        placeholder: t.bookmarks.form.title,
+        required: true,
+      },
+      {
+        key: 'url',
+        label: t.bookmarks.form.url,
+        type: 'url',
+        placeholder: t.bookmarks.form.url,
+        required: true,
+      },
+    ];
+
+    // 仅在本地模式下添加分类字段
+    if (mode === 'local') {
+      fields.push({
+        key: 'categoryId',
+        label: t.bookmarks.form.category,
+        type: 'select',
+        options: categories
+          .filter((c) => c.id !== 'all')
+          .map((c) => ({ value: c.id, label: c.name })),
+        required: true,
+      });
+    }
+
+    return fields;
+  }, [mode, t.bookmarks.form.title, t.bookmarks.form.url, t.bookmarks.form.category, categories]);
 
   // 分类表单字段
   const categoryFields: EditModalField[] = [
@@ -112,25 +180,29 @@ export function BookmarkGrid() {
   ];
 
   const handleAddBookmark = (values: Record<string, string>) => {
-    const newBookmark = {
-      id: `bm-${Date.now()}`,
-      title: values.title,
-      url: values.url.startsWith('http') ? values.url : `https://${values.url}`,
-      categoryId: values.categoryId || 'dev',
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      createdAt: Date.now(),
-      visitCount: 0,
-    };
-    addBookmark(newBookmark);
+    const url = values.url.startsWith('http') ? values.url : `https://${values.url}`;
+    const categoryId = mode === 'local' ? (values.categoryId || 'dev') : undefined;
+
+    // 使用适配器的 addBookmark 方法，同时传递分类信息
+    adapterAddBookmark(values.title, url, categoryId);
   };
 
   const handleEditBookmark = (values: Record<string, string>) => {
     if (!editingBookmark) return;
-    updateBookmark(editingBookmark, {
+    const url = values.url.startsWith('http') ? values.url : `https://${values.url}`;
+
+    // 使用适配器的 updateBookmark 方法
+    adapterUpdateBookmark(editingBookmark, {
       title: values.title,
-      url: values.url.startsWith('http') ? values.url : `https://${values.url}`,
-      categoryId: values.categoryId,
+      url,
     });
+
+    // 在本地模式下，还需要更新分类
+    if (mode === 'local') {
+      localStore.updateBookmark(editingBookmark, {
+        categoryId: values.categoryId,
+      });
+    }
   };
 
   const handleDeleteBookmark = () => {
@@ -145,7 +217,7 @@ export function BookmarkGrid() {
           deletedAt: Date.now(),
         });
       }
-      deleteBookmark(editingBookmark);
+      adapterDeleteBookmark(editingBookmark);
     }
   };
 
@@ -160,23 +232,35 @@ export function BookmarkGrid() {
         deletedAt: Date.now(),
       });
     }
-    deleteBookmark(bookmarkId);
+    adapterDeleteBookmark(bookmarkId);
   };
 
   const handleAddCategory = (values: Record<string, string>) => {
-    const newCategory = {
-      id: `cat-${Date.now()}`,
-      name: values.name,
-      order: categories.length,
-    };
-    addCategory(newCategory);
+    if (mode === 'chrome') {
+      // Chrome 模式：调用适配器创建文件夹
+      addChromeCategory(values.name);
+    } else {
+      // 本地模式
+      const newCategory = {
+        id: `cat-${Date.now()}`,
+        name: values.name,
+        order: categories.length,
+      };
+      addCategory(newCategory);
+    }
   };
 
   const handleEditCategory = (values: Record<string, string>) => {
     if (!editingCategory) return;
-    // 使用 store 的 updateCategory 方法
-    const state = useBookmarkStore.getState();
-    state.updateCategory(editingCategory, { name: values.name });
+
+    if (mode === 'chrome') {
+      // Chrome 模式：调用适配器的重命名方法
+      adapterRenameCategory(editingCategory, values.name);
+    } else {
+      // 本地模式：使用 store 的 updateCategory 方法
+      const state = useBookmarkStore.getState();
+      state.updateCategory(editingCategory, { name: values.name });
+    }
   };
 
   const handleDeleteCategory = () => {
@@ -202,21 +286,27 @@ export function BookmarkGrid() {
 
   // 执行删除分类
   const performDeleteCategory = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
-    const categoryBookmarks = bookmarks.filter(b => b.categoryId === categoryId);
+    if (mode === 'chrome') {
+      // Chrome 模式：调用适配器删除文件夹
+      deleteChromeCategoryFolder(categoryId);
+    } else {
+      // 本地模式
+      const category = categories.find(c => c.id === categoryId);
+      const categoryBookmarks = bookmarks.filter(b => b.categoryId === categoryId);
 
-    if (category) {
-      // 添加分类到回收站，同时保存其下的书签
-      addToTrash({
-        id: `trash-${Date.now()}`,
-        type: 'category',
-        data: category,
-        deletedAt: Date.now(),
-        relatedBookmarks: categoryBookmarks,
-      });
+      if (category) {
+        // 添加分类到回收站，同时保存其下的书签
+        addToTrash({
+          id: `trash-${Date.now()}`,
+          type: 'category',
+          data: category,
+          deletedAt: Date.now(),
+          relatedBookmarks: categoryBookmarks,
+        });
+      }
+
+      deleteCategory(categoryId);
     }
-
-    deleteCategory(categoryId);
 
     // 如果当前激活的是被删除的分类，切换到全部
     if (activeCategory === categoryId) {
@@ -259,14 +349,25 @@ export function BookmarkGrid() {
 
   const handleCatDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    const data = e.dataTransfer.getData('text/plain');
 
-    // 书签拖入分类
-    if (data.startsWith('bookmark:') && categories[dropIndex].id !== 'all') {
-      const bookmarkId = data.replace('bookmark:', '');
-      updateBookmark(bookmarkId, { categoryId: categories[dropIndex].id });
-      setDragOverCategoryId(null);
-      return;
+    // 尝试读取 JSON 数据（书签拖入分类）
+    const jsonData = e.dataTransfer.getData('application/json');
+    if (jsonData && categories[dropIndex].id !== 'all') {
+      try {
+        const parsed = JSON.parse(jsonData);
+        if (parsed.type === 'bookmark' && parsed.id) {
+          console.log('Moving bookmark to category:', parsed.id, '->', categories[dropIndex].id);
+          if (mode === 'chrome') {
+            moveBookmarkToCategory(parsed.id, categories[dropIndex].id);
+          } else {
+            localStore.updateBookmark(parsed.id, { categoryId: categories[dropIndex].id });
+          }
+          setDragOverCategoryId(null);
+          return;
+        }
+      } catch {
+        // 解析失败，继续处理其他情况
+      }
     }
 
     // 分类排序
@@ -279,11 +380,20 @@ export function BookmarkGrid() {
     const newCategories = [...categories];
     const [draggedItem] = newCategories.splice(catDragIndex, 1);
     newCategories.splice(dropIndex, 0, draggedItem);
-    reorderCategories(newCategories);
+
+    if (mode === 'chrome') {
+      // Chrome 模式：调用适配器重新排序
+      const orderedIds = newCategories.filter(c => c.id !== 'all').map(c => c.id);
+      console.log('Reordering categories:', orderedIds);
+      adapterReorderCategories(orderedIds);
+    } else {
+      // 本地模式
+      reorderCategories(newCategories);
+    }
 
     setCatDragIndex(null);
     setCatOverIndex(null);
-  }, [categories, catDragIndex, reorderCategories, updateBookmark]);
+  }, [categories, catDragIndex, mode, reorderCategories, localStore, moveBookmarkToCategory, adapterReorderCategories]);
 
   const handleCatDragEnd = useCallback(() => {
     setCatDragIndex(null);
@@ -296,12 +406,18 @@ export function BookmarkGrid() {
     dragBookmarkRef.current = id;
     e.dataTransfer.effectAllowed = 'copyMove';
 
-    // 设置内部用的数据（用于分类间移动）
-    e.dataTransfer.setData('text/plain', `bookmark:${id}`);
-
-    // 同时设置外部用的数据（用于拖到快捷访问）
+    // 设置 dragData，用于内部分类拖拽和书签排序
     const bookmark = bookmarks.find(b => b.id === id);
     if (bookmark) {
+      // 使用 'application/json' 存储内部数据，用于分类拖拽
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'bookmark',
+        id,
+        title: bookmark.title,
+        url: bookmark.url
+      }));
+
+      // 同时设置文本数据作为备用（用于拖到快捷访问等）
       e.dataTransfer.setData('text/plain', `external:${JSON.stringify({
         title: bookmark.title,
         url: bookmark.url
@@ -341,11 +457,23 @@ export function BookmarkGrid() {
     const newBookmarks = [...bookmarks];
     const [draggedItem] = newBookmarks.splice(fullDragIndex, 1);
     newBookmarks.splice(fullDropIndex, 0, draggedItem);
-    reorderBookmarks(newBookmarks);
+
+    // 策略说明：
+    // 在"全部"分类视图中的排序是自定义排序，会应用到整个书签列表
+    // 在具体分类视图中的排序仅在该分类内排序
+    // 都通过调用重排序方法来实现，该方法会按分类内排序 Chrome 书签
+    if (mode === 'chrome') {
+      // Chrome 模式：调用适配器重新排序
+      console.log('Reordering bookmarks in Chrome mode');
+      adapterReorderBookmarks(newBookmarks);
+    } else {
+      // 本地模式
+      reorderBookmarks(newBookmarks);
+    }
 
     setBookmarkDragIndex(null);
     setBookmarkOverIndex(null);
-  }, [bookmarks, filteredBookmarks, bookmarkDragIndex, reorderBookmarks]);
+  }, [bookmarks, filteredBookmarks, bookmarkDragIndex, mode, reorderBookmarks, adapterReorderBookmarks]);
 
   const handleBookmarkDragEnd = useCallback(() => {
     setBookmarkDragIndex(null);
@@ -396,32 +524,39 @@ export function BookmarkGrid() {
     },
   ];
 
-  const getCategoryContextMenuItems = (categoryId: string): ContextMenuItem[] => [
-    {
-      id: 'edit',
-      label: t.common.edit,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-        </svg>
-      ),
-      onClick: () => setEditingCategory(categoryId),
-    },
-    { id: 'divider', label: '', divider: true },
-    {
-      id: 'delete',
-      label: t.common.delete,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        </svg>
-      ),
-      danger: true,
-      onClick: () => tryDeleteCategory(categoryId),
-    },
-  ];
+  const getCategoryContextMenuItems = (categoryId: string): ContextMenuItem[] => {
+    // 不允许删除"全部"分类
+    if (categoryId === 'all') {
+      return [];
+    }
+
+    return [
+      {
+        id: 'edit',
+        label: t.common.edit,
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        ),
+        onClick: () => setEditingCategory(categoryId),
+      },
+      { id: 'divider', label: '', divider: true },
+      {
+        id: 'delete',
+        label: t.common.delete,
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        ),
+        danger: true,
+        onClick: () => tryDeleteCategory(categoryId),
+      },
+    ];
+  };
 
   const SearchIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -444,37 +579,53 @@ export function BookmarkGrid() {
         <div className={styles.categories}>
           {categories.map((category, index) => {
             const isAll = category.id === 'all';
+            const isActive = activeCategory === category.id;
             const isDragging = catDragIndex === index;
-            const isDragOver = catOverIndex === index || dragOverCategoryId === category.id;
+            // 区分：分类排序拖拽 vs 书签拖入分类
+            const isCategoryDragOver = catOverIndex === index && catDragIndex !== null;
+            const isBookmarkDragOver = dragOverCategoryId === category.id;
+
+            // 分类拖拽排序（两种模式都支持）
+            const isDraggable = !isAll;
 
             const categoryButton = (
-              <button
+              <motion.button
                 key={category.id}
                 className={`${styles.categoryTab} ${
-                  activeCategory === category.id ? styles.active : ''
-                } ${isDragging ? styles.dragging : ''} ${isDragOver ? styles.dragOver : ''}`}
+                  isDragging ? styles.dragging : ''
+                } ${isCategoryDragOver ? styles.dragOver : ''
+                } ${isBookmarkDragOver ? styles.dragOverBookmark : ''}`}
                 onClick={() => setActiveCategory(category.id)}
-                draggable={!isAll}
-                onDragStart={!isAll ? (e) => handleCatDragStart(e, index) : undefined}
-                onDragOver={(e) => handleCatDragOver(e, index)}
+                draggable={isDraggable}
+                onDragStart={isDraggable ? (e) => handleCatDragStart(e as unknown as React.DragEvent, index) : undefined}
+                onDragOver={(e) => handleCatDragOver(e as unknown as React.DragEvent, index)}
                 onDragLeave={handleCatDragLeave}
-                onDrop={(e) => handleCatDrop(e, index)}
+                onDrop={(e) => handleCatDrop(e as unknown as React.DragEvent, index)}
                 onDragEnd={handleCatDragEnd}
               >
-                {category.name}
-              </button>
+                {isActive && (
+                  <motion.div
+                    layoutId="activePill"
+                    className={styles.activePill}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className={styles.categoryText}>{category.name}</span>
+              </motion.button>
             );
 
             if (isAll) {
               return categoryButton;
             }
 
+            // 所有分类都支持右键菜单
             return (
               <ContextMenu key={category.id} items={getCategoryContextMenuItems(category.id)}>
                 {categoryButton}
               </ContextMenu>
             );
           })}
+          {/* 添加分类按钮（两种模式都支持） */}
           <button
             className={styles.addCategoryButton}
             onClick={() => setIsAddCategoryOpen(true)}
@@ -514,45 +665,128 @@ export function BookmarkGrid() {
 
       {/* 书签网格 */}
       <div className={styles.gridWrapper}>
-        <div className={styles.grid}>
-          {filteredBookmarks.length === 0 ? (
-            <div className={styles.empty}>
-              <p>{t.common.noData}</p>
-            </div>
-          ) : (
-            filteredBookmarks.map((bookmark, index) => (
-              <ContextMenu key={bookmark.id} items={getBookmarkContextMenuItems(bookmark.id)}>
-                <a
-                  href={bookmark.url}
-                  className={`${styles.card} ${bookmarkDragIndex === index ? styles.dragging : ''} ${bookmarkOverIndex === index ? styles.dragOver : ''}`}
-                  onClick={() => handleBookmarkClick(bookmark.id)}
-                  title={bookmark.title}
-                  draggable
-                  onDragStart={(e) => handleBookmarkDragStart(e, index, bookmark.id)}
-                  onDragOver={(e) => handleBookmarkDragOver(e, index)}
-                  onDragLeave={handleBookmarkDragLeave}
-                  onDrop={(e) => handleBookmarkDrop(e, index)}
-                  onDragEnd={handleBookmarkDragEnd}
-                >
-                  <div
-                    className={styles.icon}
-                    style={{ backgroundColor: bookmark.color }}
+        {/* 加载状态 */}
+        {isLoading && (
+          <div className={styles.empty}>
+            <p>{t.common.loading || '加载中...'}</p>
+          </div>
+        )}
+
+        {/* 错误状态 */}
+        {error && !isLoading && (
+          <div className={styles.empty}>
+            <p style={{ color: '#ef4444' }}>{error}</p>
+          </div>
+        )}
+
+        {/* 分组显示模式 */}
+        {!isLoading && !error && groupedBookmarks ? (
+          <div className={styles.groupContainer}>
+            {groupedBookmarks.length === 0 ? (
+              <div className={styles.empty}>
+                <p>{t.common.noData}</p>
+              </div>
+            ) : (
+              groupedBookmarks.map((group) => {
+                const isCollapsed = collapsedCategories.has(group.categoryId);
+                return (
+                  <div key={group.categoryId}>
+                    <div
+                      className={`${styles.groupHeader} ${isCollapsed ? styles.collapsed : ''}`}
+                      onClick={() => toggleCategoryCollapse(group.categoryId)}
+                    >
+                      <span className={styles.groupToggle}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </span>
+                      <span className={styles.groupTitle}>{group.categoryName}</span>
+                      <span className={styles.groupCount}>{group.bookmarks.length}</span>
+                    </div>
+                    <div className={`${styles.groupContent} ${isCollapsed ? styles.collapsed : ''}`}>
+                      {group.bookmarks.map((bookmark) => (
+                        <ContextMenu key={bookmark.id} items={getBookmarkContextMenuItems(bookmark.id)}>
+                          <a
+                            href={bookmark.url}
+                            className={styles.card}
+                            onClick={() => handleBookmarkClick(bookmark.id)}
+                            title={bookmark.title}
+                          >
+                            <div
+                              className={styles.icon}
+                              style={{ backgroundColor: bookmark.color }}
+                            >
+                              {bookmark.icon ? (
+                                <img src={bookmark.icon} alt="" />
+                              ) : (
+                                <FaviconImage
+                                  url={bookmark.url}
+                                  title={bookmark.title}
+                                  color={bookmark.color}
+                                  size={40}
+                                />
+                              )}
+                            </div>
+                            <div className={styles.info}>
+                              <span className={styles.title}>{bookmark.title}</span>
+                              <span className={styles.domain}>{getDomain(bookmark.url)}</span>
+                            </div>
+                          </a>
+                        </ContextMenu>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          /* 普通网格模式 */
+          <div className={styles.grid}>
+            {filteredBookmarks.length === 0 ? (
+              <div className={styles.empty}>
+                <p>{t.common.noData}</p>
+              </div>
+            ) : (
+              filteredBookmarks.map((bookmark, index) => (
+                <ContextMenu key={bookmark.id} items={getBookmarkContextMenuItems(bookmark.id)}>
+                  <a
+                    href={bookmark.url}
+                    className={`${styles.card} ${bookmarkDragIndex === index ? styles.dragging : ''} ${bookmarkOverIndex === index ? styles.dragOver : ''}`}
+                    onClick={() => handleBookmarkClick(bookmark.id)}
+                    title={bookmark.title}
+                    draggable
+                    onDragStart={(e) => handleBookmarkDragStart(e, index, bookmark.id)}
+                    onDragOver={(e) => handleBookmarkDragOver(e, index)}
+                    onDragLeave={handleBookmarkDragLeave}
+                    onDrop={(e) => handleBookmarkDrop(e, index)}
+                    onDragEnd={handleBookmarkDragEnd}
                   >
-                    {bookmark.icon ? (
-                      <img src={bookmark.icon} alt="" />
-                    ) : (
-                      <img src={getFaviconUrl(bookmark.url)} alt="" />
-                    )}
-                  </div>
-                  <div className={styles.info}>
-                    <span className={styles.title}>{bookmark.title}</span>
-                    <span className={styles.domain}>{getDomain(bookmark.url)}</span>
-                  </div>
-                </a>
-              </ContextMenu>
-            ))
-          )}
-        </div>
+                    <div
+                      className={styles.icon}
+                      style={{ backgroundColor: bookmark.color }}
+                    >
+                      {bookmark.icon ? (
+                        <img src={bookmark.icon} alt="" />
+                      ) : (
+                        <FaviconImage
+                          url={bookmark.url}
+                          title={bookmark.title}
+                          color={bookmark.color}
+                          size={40}
+                        />
+                      )}
+                    </div>
+                    <div className={styles.info}>
+                      <span className={styles.title}>{bookmark.title}</span>
+                      <span className={styles.domain}>{getDomain(bookmark.url)}</span>
+                    </div>
+                  </a>
+                </ContextMenu>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* 添加书签弹窗 */}
@@ -614,7 +848,10 @@ export function BookmarkGrid() {
           }
         }}
         title="删除分类"
-        message={`该分类下有 ${deleteCategoryConfirm?.bookmarkCount || 0} 个书签，删除后书签也会被移入回收站。确定要删除吗？`}
+        message={mode === 'chrome'
+          ? `该分类下有 ${deleteCategoryConfirm?.bookmarkCount || 0} 个书签，删除后书签和文件夹都会从 Chrome 书签中删除。确定要删除吗？`
+          : `该分类下有 ${deleteCategoryConfirm?.bookmarkCount || 0} 个书签，删除后书签也会被移入回收站。确定要删除吗？`
+        }
         confirmText="删除"
         cancelText="取消"
         danger

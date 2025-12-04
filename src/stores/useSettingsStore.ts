@@ -27,6 +27,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'newtab-settings',
       // 合并默认值，确保新字段有值
+      // 重要：持久化的值应该优先于默认值，以保留用户设置（如已保存的壁纸）
       merge: (persistedState, currentState) => {
         const persisted = persistedState as SettingsState;
         return {

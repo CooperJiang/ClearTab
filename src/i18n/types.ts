@@ -161,6 +161,30 @@ export interface TranslationSchema {
   // 最近访问
   recentVisits: {
     title: string;
+    settings: {
+      title: string;
+      count: string;
+      mode: string;
+      modeCustom: string;
+      modeChrome: string;
+      customDesc: string;
+      chromeDesc: string;
+    };
+  };
+
+  // 书签分组
+  bookmarkGrouping: {
+    title: string;
+    description: string;
+  };
+
+  // 书签模式
+  bookmarkMode: {
+    title: string;
+    chrome: string;
+    local: string;
+    chromeDesc: string;
+    localDesc: string;
   };
 
   // 每日一言
@@ -177,5 +201,13 @@ export interface TranslationSchema {
   // 壁纸按钮
   wallpaperButton: {
     tooltip: string;
+  };
+
+  // 通知消息
+  toast: {
+    wallpaperLoadSuccess: string;
+    wallpaperLoadError: string;
+    wallpaperLoadTimeout: string;
+    wallpaperApiNotConfigured: string;
   };
 }

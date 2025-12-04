@@ -184,17 +184,6 @@ export function SearchBar() {
           {currentEngine.icon && (
             <img src={currentEngine.icon} alt={currentEngine.name} className={styles.currentEngineIcon} />
           )}
-          <svg
-            className={`${styles.chevron} ${isPanelOpen ? styles.open : ''}`}
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
         </button>
         <input
           ref={inputRef}

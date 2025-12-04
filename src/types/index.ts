@@ -42,6 +42,17 @@ export type ThemeMode = 'light' | 'dark';
 // 语言类型（从 i18n 重新导出以方便使用）
 export type { Locale } from '../i18n/types';
 
+// 最近访问模式
+export type RecentVisitsMode = 'chrome' | 'custom';
+
+// 最近访问记录类型（用于自定义模式）
+export interface CustomRecentVisit {
+  id: string;
+  url: string;
+  title: string;
+  visitTime: number;
+}
+
 // 设置类型
 export interface Settings {
   backgroundImage: string;
@@ -74,6 +85,15 @@ export interface Settings {
   locale: import('../i18n/types').Locale;
   // 外观设置
   borderRadius: 'none' | 'small' | 'medium' | 'large' | 'xlarge';
+  // 书签分组设置
+  enableBookmarkGrouping: boolean;
+  // 书签模式
+  bookmarkMode: 'chrome' | 'local';
+  // 最近访问设置
+  recentVisitsCount: number;
+  recentVisitsMode: RecentVisitsMode;
+  // PixelPunk 壁纸 API 设置
+  pixelPunkApiUrl: string;
 }
 
 // 所有可用的搜索引擎
@@ -189,6 +209,13 @@ export const DEFAULT_SETTINGS: Settings = {
   randomWallpaperImageLight: '',
   locale: 'zh-CN',
   borderRadius: 'medium',
+  enableBookmarkGrouping: false,
+  bookmarkMode: 'chrome',
+  // 最近访问设置
+  recentVisitsCount: 12,
+  recentVisitsMode: 'custom',
+  // PixelPunk 壁纸 API 设置
+  pixelPunkApiUrl: 'https://v1.pixelpunk.cc/api/v1/r/rnd_7Zxaj9XXhBa4',
 };
 
 // 每日一言

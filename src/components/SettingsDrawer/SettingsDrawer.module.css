@@ -196,6 +196,17 @@
   font-size: 13px;
   color: var(--text-primary);
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.settingDescription {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+  margin-bottom: 0;
 }
 
 /* 颜色网格 */

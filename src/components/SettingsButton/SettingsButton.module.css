@@ -13,7 +13,7 @@
   border: 1px solid var(--border-color);
   border-radius: 50%;
   color: var(--text-secondary);
-  transition: var(--transition);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   z-index: 50;
 }
@@ -22,9 +22,15 @@
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.15);
-  transform: rotate(30deg);
 }
 
-.button svg {
+.icon {
+  width: 22px;
+  height: 22px;
   transition: transform 0.3s ease;
+}
+
+/* hover 时转30度 */
+.button:hover .icon {
+  transform: rotate(30deg);
 }

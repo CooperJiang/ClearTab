@@ -1,42 +1,31 @@
 // 壁纸源类型
-export type WallpaperSource = 'bing' | 'picsum';
+export type WallpaperSource = 'pixelpunk';
 
 export interface WallpaperInfo {
   url: string;
   source: WallpaperSource;
 }
 
-// Bing 每日壁纸 API（使用代理避免 CORS）
-// 参考: https://github.com/TimothyYe/bing-wallpaper
-function fetchBingWallpaper(): WallpaperInfo {
-  const idx = Math.floor(Math.random() * 8);
-  return {
-    url: `https://bing.biturl.top/?resolution=1920&format=image&index=${idx}&mkt=zh-CN`,
-    source: 'bing',
-  };
-}
+// PixelPunk 随机壁纸 API
+// 参考: https://pixelpunk.cc/
+// API 返回 304 重定向，每次都返回不同的随机壁纸
+// 我们需要获取最终的图片 URL（跟踪重定向）
+export async function fetchRandomWallpaper(pixelPunkApiUrl: string): Promise<WallpaperInfo> {
+  try {
+    console.log('[wallpaperApi] Fetching PixelPunk API:', pixelPunkApiUrl);
 
-// Picsum 随机壁纸（Lorem Picsum）
-// 参考: https://picsum.photos/
-function fetchPicsumWallpaper(): WallpaperInfo {
-  const id = Math.floor(Math.random() * 1000);
-  return {
-    url: `https://picsum.photos/id/${id}/1920/1080`,
-    source: 'picsum',
-  };
-}
+    // 使用 fetch 获取重定向后的最终 URL
+    const response = await fetch(pixelPunkApiUrl, { method: 'HEAD' });
+    const finalUrl = response.url;
 
-// 随机获取壁纸（从 Bing 和 Picsum）
-export async function fetchRandomWallpaper(): Promise<WallpaperInfo> {
-  const sources: WallpaperSource[] = ['bing', 'picsum'];
-  const randomSource = sources[Math.floor(Math.random() * sources.length)];
+    console.log('[wallpaperApi] Got final image URL:', finalUrl);
 
-  switch (randomSource) {
-    case 'bing':
-      return fetchBingWallpaper();
-    case 'picsum':
-      return fetchPicsumWallpaper();
-    default:
-      return fetchBingWallpaper();
+    return {
+      url: finalUrl,
+      source: 'pixelpunk',
+    };
+  } catch (error) {
+    console.error('[wallpaperApi] Failed to fetch PixelPunk:', error);
+    throw new Error('Failed to fetch wallpaper from PixelPunk API');
   }
 }

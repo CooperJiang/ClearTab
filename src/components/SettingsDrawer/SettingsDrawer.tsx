@@ -160,6 +160,46 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                   </div>
                 </div>
 
+                {/* 显示模块设置 */}
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>显示模块</h3>
+                  <div className={styles.settingRow}>
+                    <span className={styles.settingLabel}>{t.settings.display?.showRecentVisits || '显示最近访问'}</span>
+                    <Switch
+                      checked={settings.showRecentVisits}
+                      onChange={(checked) => updateSettings({ showRecentVisits: checked })}
+                    />
+                  </div>
+                  <div className={styles.settingRow}>
+                    <span className={styles.settingLabel}>{t.settings.display?.showQuickLinks || '显示快捷访问'}</span>
+                    <Switch
+                      checked={settings.showQuickLinks}
+                      onChange={(checked) => updateSettings({ showQuickLinks: checked })}
+                    />
+                  </div>
+                  <div className={styles.settingRow}>
+                    <span className={styles.settingLabel}>{t.settings.display?.showBookmarks || '显示书签'}</span>
+                    <Switch
+                      checked={settings.showBookmarks}
+                      onChange={(checked) => updateSettings({ showBookmarks: checked })}
+                    />
+                  </div>
+                </div>
+
+                {/* 书签分组设置 */}
+                <div className={styles.section}>
+                  <div className={styles.settingRow}>
+                    <span className={styles.settingLabel}>{t.bookmarkGrouping.title}</span>
+                    <Switch
+                      checked={settings.enableBookmarkGrouping}
+                      onChange={(checked) => updateSettings({ enableBookmarkGrouping: checked })}
+                    />
+                  </div>
+                  <p className={styles.settingDescription}>
+                    {t.bookmarkGrouping.description}
+                  </p>
+                </div>
+
                 {/* 圆角设置 */}
                 <div className={styles.section}>
                   <div className={styles.settingRow}>
@@ -261,6 +301,21 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                         {t.common.reset}
                       </Button>
                     </div>
+                  </div>
+                </div>
+
+                {/* PixelPunk 随机壁纸 API 设置 */}
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>PixelPunk API</h3>
+                  <div className={styles.wallpaperGroup}>
+                    <label className={styles.wallpaperLabel}>API URL</label>
+                    <Input
+                      type="text"
+                      placeholder="https://v1.pixelpunk.cc/api/v1/r/rnd_7Zxaj9XXhBa4"
+                      value={settings.pixelPunkApiUrl}
+                      onChange={(e) => updateSettings({ pixelPunkApiUrl: e.target.value })}
+                      fullWidth
+                    />
                   </div>
                 </div>
 
@@ -384,15 +439,74 @@ export function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps) {
                 <div className={styles.section}>
                   <div className={styles.settingRow}>
                     <span className={styles.settingLabel}>{t.settings.system.language}</span>
-                    <div className={styles.selectWrapper}>
-                      <Select
-                        value={locale}
-                        options={languageOptions}
-                        onChange={(value) => setLocale(value as typeof locale)}
-                      />
-                    </div>
+                    <Select
+                      value={locale}
+                      options={languageOptions}
+                      onChange={(value) => setLocale(value as typeof locale)}
+                      width={140}
+                    />
                   </div>
                 </div>
+
+                <div className={styles.section}>
+                  <div className={styles.settingRow}>
+                    <span className={styles.settingLabel}>{t.bookmarkMode.title}</span>
+                    <Select
+                      value={settings.bookmarkMode}
+                      options={[
+                        { value: 'chrome', label: t.bookmarkMode.chrome },
+                        { value: 'local', label: t.bookmarkMode.local }
+                      ]}
+                      onChange={(value) => updateSettings({ bookmarkMode: value as 'chrome' | 'local' })}
+                      width={140}
+                    />
+                  </div>
+                  <p className={styles.settingDescription}>
+                    {settings.bookmarkMode === 'chrome'
+                      ? t.bookmarkMode.chromeDesc
+                      : t.bookmarkMode.localDesc}
+                  </p>
+                </div>
+
+                {/* 最近访问设置 */}
+                {settings.showRecentVisits && (
+                  <div className={styles.section}>
+                    <h3 className={styles.sectionTitle}>{t.recentVisits.settings.title}</h3>
+                    <div className={styles.settingRow}>
+                      <span className={styles.settingLabel}>{t.recentVisits.settings.count}</span>
+                      <Select
+                        value={String(settings.recentVisitsCount)}
+                        onChange={(value) => updateSettings({ recentVisitsCount: Number(value) })}
+                        width={140}
+                        options={[
+                          { value: '6', label: '6' },
+                          { value: '8', label: '8' },
+                          { value: '10', label: '10' },
+                          { value: '12', label: '12' },
+                          { value: '15', label: '15' },
+                          { value: '20', label: '20' },
+                        ]}
+                      />
+                    </div>
+                    <div className={styles.settingRow}>
+                      <span className={styles.settingLabel}>{t.recentVisits.settings.mode}</span>
+                      <Select
+                        value={settings.recentVisitsMode}
+                        onChange={(value) => updateSettings({ recentVisitsMode: value as 'chrome' | 'custom' })}
+                        width={140}
+                        options={[
+                          { value: 'custom', label: t.recentVisits.settings.modeCustom },
+                          { value: 'chrome', label: t.recentVisits.settings.modeChrome },
+                        ]}
+                      />
+                    </div>
+                    <p className={styles.settingDescription}>
+                      {settings.recentVisitsMode === 'custom'
+                        ? t.recentVisits.settings.customDesc
+                        : t.recentVisits.settings.chromeDesc}
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </div>

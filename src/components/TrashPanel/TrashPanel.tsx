@@ -180,7 +180,6 @@ export function TrashPanel() {
               value={String(settings.retentionDays)}
               options={retentionOptions}
               onChange={(value) => updateSettings({ retentionDays: Number(value) })}
-              disabled={!settings.enabled}
             />
           </div>
         </div>

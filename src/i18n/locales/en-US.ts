@@ -23,12 +23,12 @@ export const enUS: TranslationSchema = {
       showThemeToggle: 'Show theme toggle button',
       accentColor: 'Accent Color',
       customColor: 'Custom',
-      borderRadius: 'Border Radius',
+      borderRadius: 'Radius',
       radiusNone: 'None',
-      radiusSmall: 'Small',
-      radiusMedium: 'Medium',
-      radiusLarge: 'Large',
-      radiusXlarge: 'XLarge',
+      radiusSmall: 'S',
+      radiusMedium: 'M',
+      radiusLarge: 'L',
+      radiusXlarge: 'XL',
     },
     wallpaper: {
       title: 'Wallpaper',
@@ -136,6 +136,28 @@ export const enUS: TranslationSchema = {
 
   recentVisits: {
     title: 'Recent Visits',
+    settings: {
+      title: 'Recent Visits Settings',
+      count: 'Display Count',
+      mode: 'Record Mode',
+      modeCustom: 'Custom Tracking',
+      modeChrome: 'Chrome History',
+      customDesc: 'Custom: Only records links clicked from this page',
+      chromeDesc: 'Chrome: Reads full browser history',
+    },
+  },
+
+  bookmarkGrouping: {
+    title: 'Group Bookmarks',
+    description: 'When enabled, bookmarks are shown in collapsible groups; when disabled, shown as grid',
+  },
+
+  bookmarkMode: {
+    title: 'Bookmark Mode',
+    chrome: 'Chrome Sync',
+    local: 'Local',
+    chromeDesc: 'Use Chrome bookmarks, syncs across devices',
+    localDesc: 'Use local bookmarks, stored in browser only',
   },
 
   quotes: {
@@ -156,5 +178,12 @@ export const enUS: TranslationSchema = {
 
   wallpaperButton: {
     tooltip: 'Random wallpaper',
+  },
+
+  toast: {
+    wallpaperLoadSuccess: 'Wallpaper updated successfully',
+    wallpaperLoadError: 'Failed to load wallpaper',
+    wallpaperLoadTimeout: 'Wallpaper loading timeout',
+    wallpaperApiNotConfigured: 'PixelPunk API not configured',
   },
 };

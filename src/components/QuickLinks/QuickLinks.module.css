@@ -108,18 +108,36 @@
 
 /* 拖拽样式 */
 .link.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
+  opacity: 0.4;
+  transform: scale(0.95);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .link.dragOver {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  position: relative;
+}
+
+.link.dragOver::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--accent-primary);
+  animation: dragIndicatorPulse 1s ease-in-out infinite;
+}
+
+@keyframes dragIndicatorPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* 外部拖入时的高亮 */
 .container.dropZoneActive {
-  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
   border-radius: var(--radius-md);
   outline: 2px dashed var(--accent-primary);
   outline-offset: -2px;
