@@ -250,6 +250,13 @@
   color: #22c55e;
 }
 
+.restoreButton:disabled {
+  background: transparent;
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .deleteButton:hover {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;

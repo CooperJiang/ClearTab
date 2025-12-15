@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function useCurrentTime(showSeconds: boolean = false) {
+export function useCurrentTime(showSeconds: boolean = false, locale: string = 'zh-CN') {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -18,12 +18,25 @@ export function useCurrentTime(showSeconds: boolean = false) {
   const seconds = time.getSeconds().toString().padStart(2, '0');
   const timeString = showSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
 
-  // 简洁的日期格式：12月2日 星期二
-  const month = time.getMonth() + 1;
-  const day = time.getDate();
-  const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-  const weekday = weekdays[time.getDay()];
-  const dateString = `${month}月${day}日 ${weekday}`;
+  // 使用 Intl 按语言格式化日期，失败时回退到基础格式
+  const dateString = (() => {
+    try {
+      const formatter = new Intl.DateTimeFormat(locale, {
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long',
+      });
+      return formatter.format(time);
+    } catch {
+      const month = time.getMonth() + 1;
+      const day = time.getDate();
+      const weekdays = locale.startsWith('en')
+        ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        : ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const weekday = weekdays[time.getDay()];
+      return `${month}/${day} ${weekday}`;
+    }
+  })();
 
   return { time, timeString, dateString };
 }

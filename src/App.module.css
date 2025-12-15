@@ -50,10 +50,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4vh 0 5vh;
+  padding: 3vh 0 4vh;
   position: relative;
   z-index: 10;
   animation: fadeInUp 0.5s ease 0.05s backwards;
+}
+
+/* 纯净模式：只有搜索框时，放在黄金分割位置（约1/3处） */
+.heroSectionOnly {
+  padding-top: 18vh;
+  padding-bottom: 0;
+}
+
+/* Sidebar layout: adjust hero section */
+.sidebarLayout .heroSection {
+  padding: 2vh 0 3vh;
+  align-items: center;
+}
+
+.sidebarLayout .heroSectionOnly {
+  padding-top: 15vh;
 }
 
 .logo {
@@ -96,13 +112,41 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  width: 100%;
   animation: fadeInUp 0.5s ease 0.1s backwards;
+}
+
+/* Sidebar Layout Styles */
+.sidebarLayout {
+  flex-direction: row;
+}
+
+.sidebarLayoutMain {
+  flex: 1;
+  min-width: 0;
+  padding-left: 32px;
+  padding-right: 40px;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent-primary) 2%, transparent) 100%
+  );
+}
+
+.searchWrapperFull {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  justify-content: center;
 }
 
 @media (max-width: 1200px) {
   .main {
     padding: 24px 32px;
   }
+
 
   .logo {
     font-size: 36px;
@@ -124,4 +168,16 @@
     font-size: 28px;
     letter-spacing: 4px;
   }
+}
+
+/* 右下角按钮容器 */
+.bottomButtons {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
 }

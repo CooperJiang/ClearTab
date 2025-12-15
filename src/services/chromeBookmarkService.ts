@@ -39,7 +39,7 @@ class BookmarkService {
         return;
       }
 
-      BrowserAPI.bookmarks.getTree((bookmarkTreeNodes) => {
+      BrowserAPI.bookmarks.getTree((bookmarkTreeNodes: chrome.bookmarks.BookmarkTreeNode[]) => {
         if (getLastError()) {
           reject(new Error(getLastError()));
         } else {
@@ -102,7 +102,7 @@ class BookmarkService {
           url,
           parentId,
         },
-        (bookmark) => {
+        (bookmark: chrome.bookmarks.BookmarkTreeNode) => {
           if (getLastError()) {
             reject(new Error(getLastError()));
           } else {
@@ -146,7 +146,7 @@ class BookmarkService {
         return;
       }
 
-      BrowserAPI.bookmarks.update(id, changes, (bookmark) => {
+      BrowserAPI.bookmarks.update(id, changes, (bookmark: chrome.bookmarks.BookmarkTreeNode) => {
         if (getLastError()) {
           reject(new Error(getLastError()));
         } else {
@@ -170,7 +170,7 @@ class BookmarkService {
         return;
       }
 
-      BrowserAPI.bookmarks.move(id, { parentId, index }, (bookmark) => {
+      BrowserAPI.bookmarks.move(id, { parentId, index }, (bookmark: chrome.bookmarks.BookmarkTreeNode) => {
         if (getLastError()) {
           reject(new Error(getLastError()));
         } else {
@@ -198,7 +198,7 @@ class BookmarkService {
           title,
           parentId: parentId || '1', // 默认放在书签栏
         },
-        (folder) => {
+        (folder: chrome.bookmarks.BookmarkTreeNode) => {
           if (getLastError()) {
             reject(new Error(getLastError()));
           } else {
@@ -239,7 +239,7 @@ class BookmarkService {
         return;
       }
 
-      BrowserAPI.bookmarks.getChildren(id, (children) => {
+      BrowserAPI.bookmarks.getChildren(id, (children: chrome.bookmarks.BookmarkTreeNode[]) => {
         if (getLastError()) {
           reject(new Error(getLastError()));
         } else {
@@ -259,7 +259,7 @@ class BookmarkService {
         return;
       }
 
-      BrowserAPI.bookmarks.get(id, (results) => {
+      BrowserAPI.bookmarks.get(id, (results: chrome.bookmarks.BookmarkTreeNode[]) => {
         if (getLastError()) {
           reject(new Error(getLastError()));
         } else {
@@ -273,21 +273,21 @@ class BookmarkService {
    * 监听书签变化
    */
   static onChanged(
-    callback: (changeType: string, id: string, changeInfo: any) => void
+    callback: (changeType: string, id: string, changeInfo: unknown) => void
   ) {
     if (!BrowserAPI?.bookmarks) return;
 
     const handlers = {
-      onCreated: (id: string, bookmark: ChromeBookmark) => {
+      onCreated: (id: string, bookmark: chrome.bookmarks.BookmarkTreeNode) => {
         callback('created', id, bookmark);
       },
-      onRemoved: (id: string, removeInfo: any) => {
+      onRemoved: (id: string, removeInfo: { parentId: string; index: number }) => {
         callback('removed', id, removeInfo);
       },
-      onChanged: (id: string, changeInfo: any) => {
+      onChanged: (id: string, changeInfo: { title?: string; url?: string }) => {
         callback('changed', id, changeInfo);
       },
-      onMoved: (id: string, moveInfo: any) => {
+      onMoved: (id: string, moveInfo: { parentId: string; index: number; oldParentId: string; oldIndex: number }) => {
         callback('moved', id, moveInfo);
       },
     };

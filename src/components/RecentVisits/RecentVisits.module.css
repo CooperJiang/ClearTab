@@ -10,7 +10,7 @@
 }
 
 .container {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   animation: fadeInUp 0.5s ease 0.1s backwards;
 }
 
@@ -27,10 +27,11 @@
 .list {
   display: flex;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-bottom: 4px; /* Add some space for shadow */
 }
 
 .list::-webkit-scrollbar {
@@ -40,14 +41,15 @@
 .item {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--bg-card);
+  gap: 6px;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
   white-space: nowrap;
   max-width: 200px;

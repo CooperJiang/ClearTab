@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Modal } from '../Modal';
 import { getAllEngines, type SearchEngine } from '../../types';
 import { useSettingsStore } from '../../stores';
+import { useTranslation } from '../../i18n';
 import styles from './SearchEngineModal.module.css';
 
 interface SearchEngineModalProps {
@@ -14,7 +15,15 @@ const MAX_ENGINES = 8;
 
 export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
   const { settings, updateSettings } = useSettingsStore();
+  const { t } = useTranslation();
   const [customUrl, setCustomUrl] = useState('');
+  const minEnginesText = t.search.engineModal.minEngines.replace('{count}', String(MIN_ENGINES));
+  const maxEnginesText = t.search.engineModal.maxEngines.replace('{count}', String(MAX_ENGINES));
+  const selectionHint = t.search.engineModal.selectionHint
+    .replace('{min}', String(MIN_ENGINES))
+    .replace('{max}', String(MAX_ENGINES))
+    .replace('{count}', String(settings.enabledSearchEngines.length));
+  const subtitle = `${t.search.engineModal.subtitle} · ${minEnginesText} · ${maxEnginesText} · ${selectionHint}`;
 
   // 获取所有引擎（内置 + 自定义）
   const allEngines = getAllEngines(settings.customSearchEngines);
@@ -51,7 +60,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
     const customId = `custom_${Date.now()}`;
 
     // 从URL提取域名作为名称
-    let name = '自定义';
+    let name = t.search.engineModal.customDefaultName;
     try {
       const url = new URL(customUrl.includes('%s') ? customUrl.replace('%s', 'test') : customUrl);
       name = url.hostname.replace('www.', '').split('.')[0];
@@ -116,8 +125,8 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="添加搜索引擎"
-      subtitle={`最少添加${MIN_ENGINES}种，最多添加${MAX_ENGINES}种（已选${settings.enabledSearchEngines.length}种）`}
+      title={t.search.engineModal.title}
+      subtitle={subtitle}
     >
       <div className={styles.engineGrid}>
         {allEngines.map((engine) => {
@@ -161,7 +170,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
                   type="button"
                   className={styles.deleteCustomButton}
                   onClick={() => handleDeleteCustomEngine(engine.id)}
-                  title="删除自定义引擎"
+                  title={t.search.engineModal.deleteCustom}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -175,7 +184,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
       </div>
 
       <div className={styles.customSection}>
-        <div className={styles.customTitle}>自定义搜索引擎</div>
+        <div className={styles.customTitle}>{t.search.engineModal.customTitle}</div>
         <div className={styles.customInputRow}>
           <div className={styles.customInputWrapper}>
             <svg className={styles.globeIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -186,7 +195,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
             <input
               type="text"
               className={styles.customInput}
-              placeholder="请输入搜索地址，用%s代替关键词，例：https://www.baidu.com/s?wd=%s"
+              placeholder={t.search.engineModal.customPlaceholder}
               value={customUrl}
               onChange={(e) => setCustomUrl(e.target.value)}
             />
@@ -196,7 +205,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
             onClick={handleAddCustom}
             disabled={!customUrl.trim()}
           >
-            保存
+            {t.common.save}
           </button>
         </div>
       </div>

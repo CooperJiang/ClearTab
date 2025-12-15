@@ -2,130 +2,99 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface FaviconCacheItem {
-  dataUrl: string;
+  base64: string;  // base64格式的图片数据
   timestamp: number;
 }
 
-interface FaviconFailureItem {
-  failureCount: number;
-  lastFailTime: number;
-}
-
 interface FaviconStoreState {
-  // 缓存：domain -> dataUrl
+  // 成功的缓存：domain -> base64
   cache: Record<string, FaviconCacheItem>;
-  // 失败记录：domain -> 失败次数
-  failures: Record<string, FaviconFailureItem>;
+  // 失败的域名：domain -> timestamp
+  failedDomains: Record<string, number>;
 
   // 方法
   getCachedFavicon: (domain: string) => string | null;
-  cacheFavicon: (domain: string, dataUrl: string) => void;
-  recordFailure: (domain: string) => void;
-  shouldRetry: (domain: string, maxFailures?: number) => boolean;
-  clearOldCache: (maxAgeMs?: number) => void;
-  getFailureCount: (domain: string) => number;
+  cacheFavicon: (domain: string, base64: string) => void;
+  markAsFailed: (domain: string) => void;
+  hasFailed: (domain: string) => boolean;
+  clearCache: () => void;
 }
 
-const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7天
-const MAX_FAILURES = 3; // 失败超过3次就不再尝试
+const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;   // 成功缓存7天
+const FAILURE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 失败记录7天后可重试
 
 export const useFaviconStore = create<FaviconStoreState>()(
   persist(
     (set, get) => ({
       cache: {},
-      failures: {},
+      failedDomains: {},
 
       /**
-       * 从缓存获取favicon
+       * 从缓存获取favicon（返回base64）
        */
       getCachedFavicon: (domain: string) => {
-        const state = get();
-        const item = state.cache[domain];
-
+        const item = get().cache[domain];
         if (!item) return null;
 
         // 检查缓存是否过期
-        const ageMs = Date.now() - item.timestamp;
-        if (ageMs > CACHE_EXPIRY_MS) {
-          // 清除过期缓存
-          set((state) => ({
-            cache: Object.fromEntries(
-              Object.entries(state.cache).filter(
-                ([_, v]) => Date.now() - v.timestamp <= CACHE_EXPIRY_MS
-              )
-            ),
-          }));
+        if (Date.now() - item.timestamp > CACHE_EXPIRY_MS) {
           return null;
         }
 
-        return item.dataUrl;
+        return item.base64;
       },
 
       /**
-       * 存储favicon到缓存
+       * 存储favicon到缓存（base64格式）
        */
-      cacheFavicon: (domain: string, dataUrl: string) => {
+      cacheFavicon: (domain: string, base64: string) => {
         set((state) => ({
           cache: {
             ...state.cache,
             [domain]: {
-              dataUrl,
+              base64,
               timestamp: Date.now(),
             },
           },
-          // 清除此域名的失败记录（成功了）
-          failures: Object.fromEntries(
-            Object.entries(state.failures).filter(([k]) => k !== domain)
+          // 同时清除失败记录
+          failedDomains: Object.fromEntries(
+            Object.entries(state.failedDomains).filter(([k]) => k !== domain)
           ),
         }));
       },
 
       /**
-       * 记录失败
+       * 标记域名为失败（7天后可重试）
        */
-      recordFailure: (domain: string) => {
+      markAsFailed: (domain: string) => {
         set((state) => ({
-          failures: {
-            ...state.failures,
-            [domain]: {
-              failureCount: (state.failures[domain]?.failureCount ?? 0) + 1,
-              lastFailTime: Date.now(),
-            },
+          failedDomains: {
+            ...state.failedDomains,
+            [domain]: Date.now(),
           },
         }));
       },
 
       /**
-       * 判断是否应该重试（失败次数未超过限制）
+       * 检查域名是否在失败冷却期内
        */
-      shouldRetry: (domain: string, maxFailures = MAX_FAILURES) => {
-        const state = get();
-        const failure = state.failures[domain];
+      hasFailed: (domain: string) => {
+        const failedTime = get().failedDomains[domain];
+        if (!failedTime) return false;
 
-        if (!failure) return true; // 没有失败记录，可以尝试
+        // 7天后可以重试
+        if (Date.now() - failedTime > FAILURE_EXPIRY_MS) {
+          return false;
+        }
 
-        return failure.failureCount < maxFailures;
+        return true;
       },
 
       /**
-       * 获取失败次数
+       * 清除所有缓存
        */
-      getFailureCount: (domain: string) => {
-        const state = get();
-        return state.failures[domain]?.failureCount ?? 0;
-      },
-
-      /**
-       * 清理过期缓存
-       */
-      clearOldCache: (maxAgeMs = CACHE_EXPIRY_MS) => {
-        set((state) => ({
-          cache: Object.fromEntries(
-            Object.entries(state.cache).filter(
-              ([_, v]) => Date.now() - v.timestamp <= maxAgeMs
-            )
-          ),
-        }));
+      clearCache: () => {
+        set({ cache: {}, failedDomains: {} });
       },
     }),
     {

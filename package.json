@@ -7,16 +7,20 @@
     "dev": "vite",
     "dev:watch": "NODE_ENV=development npm run build -- --watch",
     "build": "tsc -b && vite build && npm run copy-manifest",
-    "copy-manifest": "cp public/manifest.json dist/ && cp -r public/icons dist/ 2>/dev/null || true",
+    "copy-manifest": "cp public/manifest.json dist/ && cp -r public/icons dist/ && cp public/favicon* dist/ 2>/dev/null || true",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pack:chrome": "bash scripts/build-chrome.sh",
+    "pack:firefox": "bash scripts/build-firefox.sh"
   },
   "dependencies": {
+    "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "framer-motion": "^12.23.25",
     "lucide-react": "^0.555.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-window": "^1.8.11",
     "uuid": "^13.0.0",
     "zustand": "^5.0.9"
   },

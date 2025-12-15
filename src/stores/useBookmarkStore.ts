@@ -25,10 +25,13 @@ interface BookmarkState {
   incrementVisitCount: (id: string) => void;
   toggleCategoryCollapse: (categoryId: string) => void;
   initializeWithMockData: () => void;
+  // 云同步相关
+  setBookmarks: (bookmarks: Bookmark[]) => void;
+  setCategories: (categories: Category[]) => void;
 }
 
 // 当修改 MOCK_BOOKMARKS 数据时，增加这个版本号
-const MOCK_DATA_VERSION = 2;
+const MOCK_DATA_VERSION = 4;
 
 export const useBookmarkStore = create<BookmarkState>()(
   persist(
@@ -110,11 +113,17 @@ export const useBookmarkStore = create<BookmarkState>()(
         if (state.mockDataVersion < MOCK_DATA_VERSION || (!state.isInitialized && state.bookmarks.length === 0)) {
           set({
             bookmarks: MOCK_BOOKMARKS,
+            categories: DEFAULT_CATEGORIES, // 同时更新分类
             isInitialized: true,
             mockDataVersion: MOCK_DATA_VERSION,
           });
         }
       },
+
+      // 云同步相关
+      setBookmarks: (bookmarks) => set({ bookmarks }),
+      
+      setCategories: (categories) => set({ categories }),
     }),
     {
       name: 'newtab-bookmarks',

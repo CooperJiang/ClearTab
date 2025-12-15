@@ -12,23 +12,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  background: var(--bg-card);
+  background: color-mix(in srgb, var(--bg-card) 85%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
-  opacity: 0.4;
+  opacity: 0.7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .toggleButton:hover {
-  opacity: 0.8;
+  opacity: 1;
   color: var(--text-primary);
+  transform: scale(1.05);
 }
 
 .toggleButton svg {

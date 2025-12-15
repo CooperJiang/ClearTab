@@ -16,6 +16,7 @@
   /* 默认主题色 */
   --accent-primary: #f59e0b;
   --accent-secondary: #d97706;
+  --accent-primary-rgb: 245, 158, 11;
 
   --border-color: rgba(255, 255, 255, 0.1);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);

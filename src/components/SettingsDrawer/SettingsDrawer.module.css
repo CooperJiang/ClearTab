@@ -7,14 +7,17 @@
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+              visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              pointer-events 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 998;
 }
 
 .overlay.open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .drawer {
@@ -389,6 +392,456 @@
   background: var(--accent-primary);
   border-color: var(--accent-primary);
   color: white;
+}
+
+/* 同步按钮组 */
+.syncButtonGroup {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.syncButtonGroup button {
+  flex: 1;
+  min-width: 100px;
+}
+
+.syncModalDescription {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.syncTabBar {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full, 999px);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.syncTabButton {
+  padding: 6px 16px;
+  font-size: 13px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.syncTabButton + .syncTabButton {
+  border-left: 1px solid var(--border-color);
+}
+
+.syncTabButtonActive {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.syncTabButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.syncModalStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.syncModalCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: var(--bg-primary);
+}
+
+.syncModalCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.syncModalMetrics {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.syncModalMetric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.syncModalMetric strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.syncModalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.syncModalStrategies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.syncModalActionCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.syncModalActionCard strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.syncModalActionCard p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+.syncDiffWrapper {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: var(--bg-primary);
+  margin-bottom: 16px;
+}
+
+.syncDiffTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--text-primary);
+}
+
+.syncDiffSections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.syncDiffSection {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.syncDiffHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.syncDiffSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+.syncDiffSummary {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.syncDiffDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 12px 16px 16px;
+}
+
+.syncDiffList {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--bg-secondary);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.syncDiffListHeader {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.syncDiffList ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.syncDiffItemTitle {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.syncDiffItemSubtitle {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.syncDiffEmpty {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.syncDiffConflictRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.syncDiffTag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.syncDiffConflictText {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.chromeSyncSection {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: var(--bg-primary);
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chromeSyncHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chromeSyncTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chromeSyncDescription {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.chromeSyncStatsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.chromeSyncStatsCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--bg-secondary);
+}
+
+.chromeSyncStatsCard span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.chromeSyncStatsCard strong {
+  display: block;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin: 4px 0;
+}
+
+.chromeSyncStatsCard p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.chromeSyncNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.chromeSyncError {
+  font-size: 12px;
+  color: #ef4444;
+  margin: 0;
+}
+
+.chromeStrategyRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.chromeStrategyCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: left;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.chromeStrategyCard strong {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.chromeStrategyCard span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.chromeStrategyCardActive {
+  border-color: var(--accent-primary);
+  background: rgba(var(--accent-primary-rgb), 0.08);
+}
+
+.chromeStrategyCard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chromePreview {
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: var(--bg-secondary);
+}
+
+.chromePreviewTree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chromePreviewBranch {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  background: var(--bg-primary);
+}
+
+.chromePreviewBranch strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.chromePreviewList {
+  list-style: none;
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chromePreviewFolder {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chromePreviewBookmark {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chromePreviewBookmarkTitle {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.chromePreviewBookmarkUrl {
+  font-size: 11px;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.chromePreviewEmpty {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0;
+}
+
+.chromePreviewHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+
+.chromeSyncEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* 设置值显示 */
+.settingValue {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* 帮助链接 */
+.helpLink {
+  display: inline;
+  margin-left: 4px;
+  color: var(--primary-color);
+  text-decoration: none;
 }
 
 /* 无用的旧样式保留以防引用 */

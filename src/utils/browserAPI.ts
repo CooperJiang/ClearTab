@@ -4,11 +4,14 @@
  * 自动检测环境并使用相应的 API
  */
 
+// 声明 Firefox browser 全局变量
+declare const browser: typeof chrome | undefined;
+
 // 定义类型
 interface BrowserAPINamespace {
-  runtime: typeof chrome.runtime | typeof browser.runtime;
-  bookmarks: typeof chrome.bookmarks | typeof browser.bookmarks;
-  history: typeof chrome.history | typeof browser.history;
+  runtime: typeof chrome.runtime;
+  bookmarks: typeof chrome.bookmarks;
+  history: typeof chrome.history;
 }
 
 /**
@@ -23,15 +26,9 @@ function isFirefox(): boolean {
  * 优先使用 Firefox API，降级到 Chrome API
  */
 export const BrowserAPI: BrowserAPINamespace = {
-  runtime: isFirefox()
-    ? (browser?.runtime as typeof chrome.runtime)
-    : chrome.runtime,
-  bookmarks: isFirefox()
-    ? (browser?.bookmarks as typeof chrome.bookmarks)
-    : chrome.bookmarks,
-  history: isFirefox()
-    ? (browser?.history as typeof chrome.history)
-    : chrome.history,
+  runtime: isFirefox() ? browser!.runtime : chrome.runtime,
+  bookmarks: isFirefox() ? browser!.bookmarks : chrome.bookmarks,
+  history: isFirefox() ? browser!.history : chrome.history,
 };
 
 /**

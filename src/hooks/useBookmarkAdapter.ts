@@ -154,6 +154,19 @@ export function useBookmarkAdapter() {
     }
   }, [settings.bookmarkMode, loadChromeBookmarks, loadLocalBookmarks]);
 
+  // 本地模式下，实时响应 store 的更新
+  useEffect(() => {
+    if (mode !== 'local') return;
+
+    setBookmarks(
+      localStore.bookmarks.map((b) => ({
+        ...b,
+        source: 'local' as const,
+      }))
+    );
+    setCategories(localStore.categories);
+  }, [mode, localStore.bookmarks, localStore.categories]);
+
   // 添加书签
   const addBookmark = useCallback(
     async (title: string, url: string, categoryId?: string) => {

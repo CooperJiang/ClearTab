@@ -27,6 +27,7 @@ interface BookmarkMetadataState {
   removeTagFromBookmark: (chromeId: string, tag: string) => void;
   togglePin: (chromeId: string) => void;
   setColor: (chromeId: string, color: string) => void;
+  resetMetadata: () => void;
 }
 
 export const useBookmarkMetadataStore = create<BookmarkMetadataState>()(
@@ -140,6 +141,13 @@ export const useBookmarkMetadataStore = create<BookmarkMetadataState>()(
 
       setColor: (chromeId: string, color: string) => {
         get().setMetadata(chromeId, { color });
+      },
+
+      resetMetadata: () => {
+        set({
+          metadata: new Map(),
+          allTags: new Set(),
+        });
       },
     }),
     {

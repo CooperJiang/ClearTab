@@ -45,6 +45,9 @@ export type { Locale } from '../i18n/types';
 // 最近访问模式
 export type RecentVisitsMode = 'chrome' | 'custom';
 
+// 一言刷新频率
+export type QuoteRefreshInterval = 'refresh' | '1min' | '10min' | '1hour' | '1day';
+
 // 最近访问记录类型（用于自定义模式）
 export interface CustomRecentVisit {
   id: string;
@@ -73,6 +76,7 @@ export interface Settings {
   showSeconds: boolean;
   clockColor: string;
   showQuote: boolean;
+  quoteRefreshInterval: QuoteRefreshInterval;
   showThemeToggle: boolean;
   userName: string;
   themeMode: ThemeMode;
@@ -85,6 +89,7 @@ export interface Settings {
   locale: import('../i18n/types').Locale;
   // 外观设置
   borderRadius: 'none' | 'small' | 'medium' | 'large' | 'xlarge';
+  layoutMode: 'classic' | 'sidebar';
   // 书签分组设置
   enableBookmarkGrouping: boolean;
   // 书签模式
@@ -94,6 +99,35 @@ export interface Settings {
   recentVisitsMode: RecentVisitsMode;
   // PixelPunk 壁纸 API 设置
   pixelPunkApiUrl: string;
+  // WebDAV 同步设置
+  webdavEnabled: boolean;
+  webdavUrl: string;
+  webdavUsername: string;
+  webdavPassword: string;
+  webdavPath: string;
+  webdavAutoSync: boolean;
+  webdavLastSyncTime: number;
+  // GitHub Gist 同步设置
+  githubEnabled: boolean;
+  githubToken: string;
+  githubGistId: string;
+  githubAutoSync: boolean;
+  githubLastSyncTime: number;
+  // 小组件设置
+  showPomodoroTimer: boolean;
+  pomodoroPosition: { x: number; y: number };
+  pomodoroWorkDuration: number; // 工作时长（分钟）
+  pomodoroBreakDuration: number; // 休息时长（分钟）
+  pomodoroShowSecondTicks: boolean; // 显示秒刻度线
+  // 搜索栏设置
+  showSearchBar: boolean;
+  searchBarHeight: number; // 高度 (px)
+  searchBarWidth: number; // 宽度 (px)
+  searchBarBorderRadius: number; // 圆角 (px)
+  searchBarOpacity: number; // 透明度 (0-1)
+  showSearchHistory: boolean; // 显示搜索历史
+  // 布局设置
+  contentMaxWidth: number; // 主视图最大宽度 (px)
 }
 
 // 所有可用的搜索引擎
@@ -154,6 +188,11 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'tools', name: '工具', order: 4 },
   { id: 'entertainment', name: '娱乐', order: 5 },
   { id: 'news', name: '资讯', order: 6 },
+  { id: 'ai', name: 'AI', order: 7 },
+  { id: 'social', name: '社交', order: 8 },
+  { id: 'shopping', name: '购物', order: 9 },
+  { id: 'finance', name: '金融', order: 10 },
+  { id: 'reading', name: '阅读', order: 11 },
 ];
 
 // 可选主题色
@@ -200,6 +239,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showSeconds: false,
   clockColor: '#ffffff',
   showQuote: true,
+  quoteRefreshInterval: 'refresh',
   showThemeToggle: false,
   userName: '',
   themeMode: 'dark',
@@ -209,6 +249,7 @@ export const DEFAULT_SETTINGS: Settings = {
   randomWallpaperImageLight: '',
   locale: 'zh-CN',
   borderRadius: 'medium',
+  layoutMode: 'classic',
   enableBookmarkGrouping: false,
   bookmarkMode: 'chrome',
   // 最近访问设置
@@ -216,6 +257,35 @@ export const DEFAULT_SETTINGS: Settings = {
   recentVisitsMode: 'custom',
   // PixelPunk 壁纸 API 设置
   pixelPunkApiUrl: 'https://v1.pixelpunk.cc/api/v1/r/rnd_7Zxaj9XXhBa4',
+  // WebDAV 同步设置
+  webdavEnabled: false,
+  webdavUrl: '',
+  webdavUsername: '',
+  webdavPassword: '',
+  webdavPath: '/cleartab/',
+  webdavAutoSync: false,
+  webdavLastSyncTime: 0,
+  // GitHub Gist 同步设置
+  githubEnabled: false,
+  githubToken: '',
+  githubGistId: '',
+  githubAutoSync: false,
+  githubLastSyncTime: 0,
+  // 小组件设置
+  showPomodoroTimer: false,
+  pomodoroPosition: { x: 1180, y: 50 }, // 右上角一言左边
+  pomodoroWorkDuration: 25,
+  pomodoroBreakDuration: 5,
+  pomodoroShowSecondTicks: true,
+  // 搜索栏设置
+  showSearchBar: true,
+  searchBarHeight: 44,
+  searchBarWidth: 560,
+  searchBarBorderRadius: 10,
+  searchBarOpacity: 1,
+  showSearchHistory: true,
+  // 布局设置
+  contentMaxWidth: 0, // 0 表示不限制，使用默认 padding
 };
 
 // 每日一言

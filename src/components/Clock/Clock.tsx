@@ -4,7 +4,7 @@ import styles from './Clock.module.css';
 
 export function Clock() {
   const { settings } = useSettingsStore();
-  const { timeString, dateString } = useCurrentTime(settings.showSeconds);
+  const { timeString, dateString } = useCurrentTime(settings.showSeconds, settings.locale);
 
   return (
     <div className={styles.clock}>

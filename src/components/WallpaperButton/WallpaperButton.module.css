@@ -1,12 +1,9 @@
 .button {
-  position: fixed;
-  bottom: 20px;
-  right: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   background: var(--bg-card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -15,7 +12,6 @@
   color: var(--text-secondary);
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
-  z-index: 50;
 }
 
 .button:hover {
@@ -29,8 +25,8 @@
 }
 
 .icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   transition: transform 0.3s ease;
 }
 

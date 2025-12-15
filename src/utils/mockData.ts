@@ -76,6 +76,62 @@ export const MOCK_BOOKMARKS: Bookmark[] = [
   { id: generateId(), title: 'Wired', url: 'https://www.wired.com', color: '#000000', categoryId: 'news', createdAt: Date.now(), visitCount: 4 },
   { id: generateId(), title: 'Ars Technica', url: 'https://arstechnica.com', color: '#ff4e00', categoryId: 'news', createdAt: Date.now(), visitCount: 5 },
   { id: generateId(), title: 'InfoQ', url: 'https://www.infoq.cn', color: '#007bff', categoryId: 'news', createdAt: Date.now(), visitCount: 7 },
+
+  // AI 类
+  { id: generateId(), title: 'ChatGPT', url: 'https://chat.openai.com', color: '#10a37f', categoryId: 'ai', createdAt: Date.now(), visitCount: 100 },
+  { id: generateId(), title: 'Claude', url: 'https://claude.ai', color: '#d97706', categoryId: 'ai', createdAt: Date.now(), visitCount: 85 },
+  { id: generateId(), title: 'Midjourney', url: 'https://www.midjourney.com', color: '#000000', categoryId: 'ai', createdAt: Date.now(), visitCount: 40 },
+  { id: generateId(), title: 'Stable Diffusion', url: 'https://stability.ai', color: '#7c3aed', categoryId: 'ai', createdAt: Date.now(), visitCount: 25 },
+  { id: generateId(), title: 'Hugging Face', url: 'https://huggingface.co', color: '#ffcc00', categoryId: 'ai', createdAt: Date.now(), visitCount: 30 },
+  { id: generateId(), title: 'Perplexity', url: 'https://www.perplexity.ai', color: '#20b2aa', categoryId: 'ai', createdAt: Date.now(), visitCount: 45 },
+  { id: generateId(), title: 'Poe', url: 'https://poe.com', color: '#7b68ee', categoryId: 'ai', createdAt: Date.now(), visitCount: 20 },
+  { id: generateId(), title: 'Gemini', url: 'https://gemini.google.com', color: '#4285f4', categoryId: 'ai', createdAt: Date.now(), visitCount: 35 },
+  { id: generateId(), title: '文心一言', url: 'https://yiyan.baidu.com', color: '#2932e1', categoryId: 'ai', createdAt: Date.now(), visitCount: 28 },
+  { id: generateId(), title: '通义千问', url: 'https://tongyi.aliyun.com', color: '#ff6a00', categoryId: 'ai', createdAt: Date.now(), visitCount: 22 },
+  { id: generateId(), title: 'Cursor', url: 'https://cursor.sh', color: '#000000', categoryId: 'ai', createdAt: Date.now(), visitCount: 50 },
+  { id: generateId(), title: 'v0.dev', url: 'https://v0.dev', color: '#000000', categoryId: 'ai', createdAt: Date.now(), visitCount: 38 },
+
+  // 社交类
+  { id: generateId(), title: 'Twitter / X', url: 'https://twitter.com', color: '#000000', categoryId: 'social', createdAt: Date.now(), visitCount: 60 },
+  { id: generateId(), title: '微博', url: 'https://weibo.com', color: '#e6162d', categoryId: 'social', createdAt: Date.now(), visitCount: 35 },
+  { id: generateId(), title: '小红书', url: 'https://www.xiaohongshu.com', color: '#fe2c55', categoryId: 'social', createdAt: Date.now(), visitCount: 40 },
+  { id: generateId(), title: 'Instagram', url: 'https://www.instagram.com', color: '#e4405f', categoryId: 'social', createdAt: Date.now(), visitCount: 30 },
+  { id: generateId(), title: 'Facebook', url: 'https://www.facebook.com', color: '#1877f2', categoryId: 'social', createdAt: Date.now(), visitCount: 15 },
+  { id: generateId(), title: 'LinkedIn', url: 'https://www.linkedin.com', color: '#0a66c2', categoryId: 'social', createdAt: Date.now(), visitCount: 25 },
+  { id: generateId(), title: 'Discord', url: 'https://discord.com', color: '#5865f2', categoryId: 'social', createdAt: Date.now(), visitCount: 45 },
+  { id: generateId(), title: 'Telegram', url: 'https://web.telegram.org', color: '#26a5e4', categoryId: 'social', createdAt: Date.now(), visitCount: 20 },
+  { id: generateId(), title: 'Reddit', url: 'https://www.reddit.com', color: '#ff4500', categoryId: 'social', createdAt: Date.now(), visitCount: 28 },
+  { id: generateId(), title: 'V2EX', url: 'https://www.v2ex.com', color: '#333333', categoryId: 'social', createdAt: Date.now(), visitCount: 32 },
+
+  // 购物类
+  { id: generateId(), title: '淘宝', url: 'https://www.taobao.com', color: '#ff5000', categoryId: 'shopping', createdAt: Date.now(), visitCount: 50 },
+  { id: generateId(), title: '京东', url: 'https://www.jd.com', color: '#e1251b', categoryId: 'shopping', createdAt: Date.now(), visitCount: 45 },
+  { id: generateId(), title: '拼多多', url: 'https://www.pinduoduo.com', color: '#e02e24', categoryId: 'shopping', createdAt: Date.now(), visitCount: 20 },
+  { id: generateId(), title: '天猫', url: 'https://www.tmall.com', color: '#ff0036', categoryId: 'shopping', createdAt: Date.now(), visitCount: 35 },
+  { id: generateId(), title: 'Amazon', url: 'https://www.amazon.com', color: '#ff9900', categoryId: 'shopping', createdAt: Date.now(), visitCount: 30 },
+  { id: generateId(), title: '当当', url: 'https://www.dangdang.com', color: '#e4393c', categoryId: 'shopping', createdAt: Date.now(), visitCount: 10 },
+  { id: generateId(), title: '唱片网', url: 'https://www.smzdm.com', color: '#e02e24', categoryId: 'shopping', createdAt: Date.now(), visitCount: 28 },
+  { id: generateId(), title: '网易严选', url: 'https://you.163.com', color: '#d43c33', categoryId: 'shopping', createdAt: Date.now(), visitCount: 15 },
+
+  // 金融类
+  { id: generateId(), title: '支付宝', url: 'https://www.alipay.com', color: '#1677ff', categoryId: 'finance', createdAt: Date.now(), visitCount: 40 },
+  { id: generateId(), title: '雪球', url: 'https://xueqiu.com', color: '#1da1f2', categoryId: 'finance', createdAt: Date.now(), visitCount: 35 },
+  { id: generateId(), title: '东方财富', url: 'https://www.eastmoney.com', color: '#e41f19', categoryId: 'finance', createdAt: Date.now(), visitCount: 25 },
+  { id: generateId(), title: '同花顺', url: 'https://www.10jqka.com.cn', color: '#e60012', categoryId: 'finance', createdAt: Date.now(), visitCount: 20 },
+  { id: generateId(), title: 'Yahoo Finance', url: 'https://finance.yahoo.com', color: '#6001d2', categoryId: 'finance', createdAt: Date.now(), visitCount: 18 },
+  { id: generateId(), title: 'TradingView', url: 'https://www.tradingview.com', color: '#2962ff', categoryId: 'finance', createdAt: Date.now(), visitCount: 30 },
+  { id: generateId(), title: 'CoinMarketCap', url: 'https://coinmarketcap.com', color: '#3861fb', categoryId: 'finance', createdAt: Date.now(), visitCount: 22 },
+  { id: generateId(), title: 'Binance', url: 'https://www.binance.com', color: '#f0b90b', categoryId: 'finance', createdAt: Date.now(), visitCount: 28 },
+
+  // 阅读类
+  { id: generateId(), title: '微信读书', url: 'https://weread.qq.com', color: '#1aad19', categoryId: 'reading', createdAt: Date.now(), visitCount: 45 },
+  { id: generateId(), title: 'Kindle', url: 'https://read.amazon.com', color: '#ff9900', categoryId: 'reading', createdAt: Date.now(), visitCount: 20 },
+  { id: generateId(), title: '豆瓣读书', url: 'https://book.douban.com', color: '#007722', categoryId: 'reading', createdAt: Date.now(), visitCount: 30 },
+  { id: generateId(), title: 'Goodreads', url: 'https://www.goodreads.com', color: '#553b08', categoryId: 'reading', createdAt: Date.now(), visitCount: 15 },
+  { id: generateId(), title: '起点读书', url: 'https://www.qidian.com', color: '#e4393c', categoryId: 'reading', createdAt: Date.now(), visitCount: 25 },
+  { id: generateId(), title: '番茄小说', url: 'https://www.fqnovel.com', color: '#ff6633', categoryId: 'reading', createdAt: Date.now(), visitCount: 18 },
+  { id: generateId(), title: '多看阅读', url: 'https://www.duokan.com', color: '#4a9ef8', categoryId: 'reading', createdAt: Date.now(), visitCount: 12 },
+  { id: generateId(), title: 'Z-Library', url: 'https://z-lib.org', color: '#e74c3c', categoryId: 'reading', createdAt: Date.now(), visitCount: 35 },
 ];
 
 // 示例快捷访问

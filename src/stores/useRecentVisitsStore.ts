@@ -10,6 +10,8 @@ interface RecentVisitsState {
   addVisit: (url: string, title: string) => void;
   removeVisit: (id: string) => void;
   clearVisits: () => void;
+  // 云同步相关
+  setCustomVisits: (visits: CustomRecentVisit[]) => void;
 }
 
 const MAX_VISITS = 100; // 最多保存100条记录
@@ -71,6 +73,9 @@ export const useRecentVisitsStore = create<RecentVisitsState>()(
         })),
 
       clearVisits: () => set({ customVisits: [] }),
+
+      // 云同步相关
+      setCustomVisits: (visits) => set({ customVisits: visits }),
     }),
     {
       name: 'newtab-recent-visits',

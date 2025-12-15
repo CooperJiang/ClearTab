@@ -29,6 +29,10 @@ export interface TranslationSchema {
     delete: string;
     edit: string;
     add: string;
+    clear: string;
+    collapse: string;
+    expand: string;
+    openInNewTab: string;
     search: string;
     loading: string;
     noData: string;
@@ -37,6 +41,11 @@ export interface TranslationSchema {
   // 设置页面
   settings: {
     title: string;
+    menu: {
+      layout: string;
+      tools: string;
+      about: string;
+    };
     theme: {
       title: string;
       darkMode: string;
@@ -81,6 +90,50 @@ export interface TranslationSchema {
       showQuickLinks: string;
       showBookmarks: string;
     };
+    layout: {
+      title: string;
+      sidebarLayout: string;
+      sidebarDescription: string;
+      mainAreaTitle: string;
+      limitContentWidth: string;
+      maxContentWidth: string;
+      mainAreaDescription: string;
+      searchBarTitle: string;
+      showSearchBar: string;
+      height: string;
+      width: string;
+      radius: string;
+      opacity: string;
+      searchHistory: string;
+    };
+    quote: {
+      title: string;
+      refreshInterval: string;
+      refreshOptions: {
+        refresh: string;
+        '1min': string;
+        '10min': string;
+        '1hour': string;
+        '1day': string;
+      };
+    };
+    pomodoro: {
+      title: string;
+      showTimer: string;
+      workDuration: string;
+      breakDuration: string;
+      showSecondTicks: string;
+      description: string;
+      minutes: string;
+    };
+    about: {
+      title: string;
+      version: string;
+      community: string;
+      wechat: string;
+      qq: string;
+      comingSoon: string;
+    };
     system: {
       title: string;
       language: string;
@@ -108,17 +161,31 @@ export interface TranslationSchema {
       itemsCount: string;
       today: string;
       yesterday: string;
+      browserMode: string;
+      localMode: string;
+      browserUnavailable: string;
+      browserMissingUrl: string;
+      browserRestoreFailed: string;
+      browserCategoryUnsupported: string;
     };
   };
 
   // 搜索栏
   search: {
     placeholder: string;
+    historyTitle: string;
+    clearHistory: string;
     engineModal: {
       title: string;
       subtitle: string;
       minEngines: string;
       maxEngines: string;
+      selectionHint: string;
+      customTitle: string;
+      customPlaceholder: string;
+      deleteCustom: string;
+      saveCustom?: string;
+      customDefaultName: string;
     };
   };
 
@@ -132,6 +199,30 @@ export interface TranslationSchema {
     };
   };
 
+  // 主题切换
+  themeToggle: {
+    toLight: string;
+    toDark: string;
+  };
+
+  // 侧边栏
+  sidebar: {
+    expand: string;
+    collapse: string;
+    quickLinks: string;
+    recentVisits: string;
+    categories: string;
+    editQuickLink: string;
+    editCategory: string;
+  };
+
+  // 可拖拽小组件
+  widget: {
+    expand: string;
+    minimize: string;
+    close: string;
+  };
+
   // 书签
   bookmarks: {
     title: string;
@@ -140,6 +231,9 @@ export interface TranslationSchema {
     deleteConfirm: string;
     addCategory: string;
     editCategory: string;
+    deleteCategoryTitle: string;
+    deleteCategoryConfirmChrome: string;
+    deleteCategoryConfirmLocal: string;
     form: {
       title: string;
       url: string;
@@ -209,5 +303,139 @@ export interface TranslationSchema {
     wallpaperLoadError: string;
     wallpaperLoadTimeout: string;
     wallpaperApiNotConfigured: string;
+  };
+
+  // 数据同步
+  dataSync: {
+    title: string;
+    webdav: {
+      title: string;
+      enable: string;
+      serverUrl: string;
+      serverUrlPlaceholder: string;
+      username: string;
+      usernamePlaceholder: string;
+      password: string;
+      passwordPlaceholder: string;
+      path: string;
+      pathPlaceholder: string;
+      autoSync: string;
+      autoSyncDesc: string;
+      testConnection: string;
+      syncNow: string;
+      uploadData: string;
+      downloadData: string;
+      lastSync: string;
+      never: string;
+      testing: string;
+      syncing: string;
+      connectionSuccess: string;
+      connectionFailed: string;
+      syncSuccess: string;
+      syncFailed: string;
+      uploadSuccess: string;
+      uploadFailed: string;
+      downloadSuccess: string;
+      downloadFailed: string;
+      configIncomplete: string;
+      downloadDialogTitle: string;
+      downloadDialogSubtitle: string;
+      downloadDialogDescription: string;
+      downloadReplace: string;
+      downloadReplaceDesc: string;
+      downloadRemotePrimary: string;
+      downloadRemotePrimaryDesc: string;
+      downloadLocalPrimary: string;
+      downloadLocalPrimaryDesc: string;
+      downloadCancel: string;
+      downloadReplaceSuccess: string;
+      downloadRemotePrimarySuccess: string;
+      downloadLocalPrimarySuccess: string;
+      localData: string;
+      remoteData: string;
+      stats: {
+        bookmarks: string;
+        quickLinks: string;
+        categories: string;
+        customVisits: string;
+      };
+      diffTitle: string;
+      diffAdded: string;
+      diffRemoved: string;
+      diffChanged: string;
+      diffNoChanges: string;
+      diffShowDetails: string;
+      diffHideDetails: string;
+      diffRemoteOnly: string;
+      diffLocalOnly: string;
+      diffConflicts: string;
+      diffRemoteVersion: string;
+      diffLocalVersion: string;
+      diffNoDetails: string;
+      diffEmpty: string;
+    };
+    github: {
+      title: string;
+      enable: string;
+      token: string;
+      tokenPlaceholder: string;
+      tokenHelp: string;
+      tokenHelpLink: string;
+      gistId: string;
+      gistIdPlaceholder: string;
+      gistIdHelp: string;
+      autoSync: string;
+      autoSyncDesc: string;
+      testConnection: string;
+      uploadData: string;
+      downloadData: string;
+      lastSync: string;
+      never: string;
+      testing: string;
+      syncing: string;
+      connectionSuccess: string;
+      connectionFailed: string;
+      uploadSuccess: string;
+      uploadFailed: string;
+      downloadSuccess: string;
+      downloadFailed: string;
+      configIncomplete: string;
+      gistCreated: string;
+      requireUpload: string;
+    };
+    browser: {
+      title: string;
+      description: string;
+      statsFolders: string;
+      diffLabel: string;
+      diffAdded: string;
+      diffRemoved: string;
+      diffChanged: string;
+      metadataNote: string;
+      previewButton: string;
+      previewClose: string;
+      previewEmpty: string;
+      previewLimit: string;
+      emptyFolder: string;
+      unnamedFolder: string;
+      unnamedBookmark: string;
+      defaultRoot: string;
+      emptyBackup: string;
+      apiUnavailable: string;
+      captureFailed: string;
+      appendSuccess: string;
+      replaceSuccess: string;
+      applyFailed: string;
+      strategy: {
+        skip: string;
+        skipDesc: string;
+        append: string;
+        appendDesc: string;
+        replace: string;
+        replaceDesc: string;
+      };
+      tabCustom: string;
+      tabBrowser: string;
+    };
   };
 }

@@ -44,7 +44,7 @@ class HistoryService {
           startTime: startTime || defaultStartTime,
           maxResults: maxResults * 2, // 获取更多用于过滤
         },
-        (results) => {
+        (results: chrome.history.HistoryItem[]) => {
           if (getLastError()) {
             console.error('History API error:', getLastError());
             resolve([]);
@@ -54,7 +54,7 @@ class HistoryService {
           // 过滤和转换结果（并按 URL 去重）
           const seen = new Set<string>();
           const filteredResults = (results || [])
-            .filter((item) => {
+            .filter((item: chrome.history.HistoryItem) => {
               // 过滤掉无效的 URL
               if (!item.url) return false;
               // 过滤掉 chrome:// 和 edge:// 等浏览器内部页面
@@ -72,7 +72,7 @@ class HistoryService {
               return true;
             })
             .slice(0, maxResults)
-            .map((item) => {
+            .map((item: chrome.history.HistoryItem) => {
               let title = item.title;
               if (!title) {
                 try {
@@ -113,7 +113,7 @@ class HistoryService {
           text: query,
           maxResults,
         },
-        (results) => {
+        (results: chrome.history.HistoryItem[]) => {
           if (getLastError()) {
             console.error('History API error:', getLastError());
             resolve([]);
@@ -121,8 +121,8 @@ class HistoryService {
           }
 
           const historyItems = results
-            .filter((item) => item.url && item.title)
-            .map((item) => ({
+            .filter((item: chrome.history.HistoryItem) => item.url && item.title)
+            .map((item: chrome.history.HistoryItem) => ({
               id: item.id || `history-${Date.now()}-${Math.random()}`,
               url: item.url!,
               title: item.title || new URL(item.url!).hostname,
@@ -146,7 +146,7 @@ class HistoryService {
     }
 
     return new Promise((resolve) => {
-      BrowserAPI.history.getVisits({ url }, (visits) => {
+      BrowserAPI.history.getVisits({ url }, (visits: chrome.history.VisitItem[]) => {
         if (getLastError()) {
           console.error('History API error:', getLastError());
           resolve([]);

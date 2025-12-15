@@ -10,7 +10,7 @@
 }
 
 .container {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   animation: fadeInUp 0.5s ease 0.15s backwards;
 }
 
@@ -27,20 +27,22 @@
 .list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--bg-card);
+  gap: 6px;
+  padding: 8px 14px;
+  max-width: 220px;
+  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .link:hover {
@@ -81,6 +83,9 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .addButton {
@@ -137,8 +142,6 @@
 
 /* 外部拖入时的高亮 */
 .container.dropZoneActive {
-  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
   border-radius: var(--radius-md);
-  outline: 2px dashed var(--accent-primary);
-  outline-offset: -2px;
 }

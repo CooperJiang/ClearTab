@@ -4,7 +4,7 @@ import type { QuickLink } from '../types';
 import { MOCK_QUICKLINKS } from '../utils/mockData';
 
 // 当修改 MOCK_QUICKLINKS 数据时，增加这个版本号
-const MOCK_DATA_VERSION = 2;
+const MOCK_DATA_VERSION = 3;
 
 interface QuickLinkState {
   quickLinks: QuickLink[];
@@ -17,6 +17,8 @@ interface QuickLinkState {
   deleteQuickLink: (id: string) => void;
   reorderQuickLinks: (links: QuickLink[]) => void;
   initializeWithMockData: () => void;
+  // 云同步相关
+  setQuickLinks: (links: QuickLink[]) => void;
 }
 
 export const useQuickLinkStore = create<QuickLinkState>()(
@@ -57,6 +59,9 @@ export const useQuickLinkStore = create<QuickLinkState>()(
           });
         }
       },
+
+      // 云同步相关
+      setQuickLinks: (links) => set({ quickLinks: links }),
     }),
     {
       name: 'newtab-quicklinks',

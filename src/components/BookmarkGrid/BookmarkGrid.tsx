@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
+import { FixedSizeGrid } from 'react-window';
 import { useBookmarkAdapter } from '../../hooks/useBookmarkAdapter';
-import { useTrashStore, useSettingsStore, useBookmarkStore, useRecentVisitsStore } from '../../stores';
+import { useTrashStore, useSettingsStore, useBookmarkStore, useRecentVisitsStore, useBookmarkMetadataStore } from '../../stores';
 import { getDomain } from '../../utils';
 import { Button, ContextMenu, ConfirmDialog, type ContextMenuItem } from '../ui';
 import { EditModal, type EditModalField } from '../EditModal';
@@ -9,7 +10,12 @@ import { FaviconImage } from '../FaviconImage';
 import { useTranslation } from '../../i18n';
 import styles from './BookmarkGrid.module.css';
 
-export function BookmarkGrid() {
+const MIN_COL_WIDTH = 220; // 最小列宽
+const MAX_COL_WIDTH = 280; // 最大列宽，防止少量项过宽
+const GRID_GAP = 10; // gap
+const CARD_HEIGHT = 70; // 卡片高度
+
+export function BookmarkGrid({ showCategories = true }: { showCategories?: boolean }) {
   const { settings } = useSettingsStore();
   const { addToTrash } = useTrashStore();
   const addVisit = useRecentVisitsStore((state) => state.addVisit);
@@ -52,6 +58,7 @@ export function BookmarkGrid() {
   const [editingBookmark, setEditingBookmark] = useState<string | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [gridSize, setGridSize] = useState({ width: 0, height: 0 });
 
   // 删除确认弹窗状态
   const [deleteCategoryConfirm, setDeleteCategoryConfirm] = useState<{
@@ -68,6 +75,7 @@ export function BookmarkGrid() {
   const [bookmarkOverIndex, setBookmarkOverIndex] = useState<number | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
   const dragBookmarkRef = useRef<string | null>(null);
+  const gridWrapperRef = useRef<HTMLDivElement>(null);
 
   // 过滤书签（支持搜索和分类过滤）
   const filteredBookmarks = useMemo(() => {
@@ -90,6 +98,71 @@ export function BookmarkGrid() {
 
     return result;
   }, [bookmarks, activeCategory, searchQuery]);
+
+  const columns = useMemo(() => {
+    const availableWidth = Math.max(gridSize.width, MIN_COL_WIDTH);
+    // 优先按最小宽度 + 间距排列
+    const minCols = Math.max(1, Math.floor((availableWidth + GRID_GAP) / (MIN_COL_WIDTH + GRID_GAP)));
+    // 再限制最大宽度，避免少量元素拉伸过宽
+    const maxCols = Math.max(1, Math.floor((availableWidth + GRID_GAP) / (MAX_COL_WIDTH + GRID_GAP)));
+    return Math.max(maxCols, minCols);
+  }, [gridSize.width]);
+
+  const columnWidth = useMemo(() => {
+    const availableWidth = Math.max(gridSize.width, MIN_COL_WIDTH);
+    const totalGap = GRID_GAP * Math.max(0, columns - 1);
+    const widthWithoutGap = Math.max(availableWidth - totalGap, MIN_COL_WIDTH);
+    const rawWidth = widthWithoutGap / columns;
+    return Math.min(Math.max(rawWidth, MIN_COL_WIDTH), MAX_COL_WIDTH);
+  }, [gridSize.width, columns]);
+
+  const rowHeight = CARD_HEIGHT + GRID_GAP;
+  const rowCount = Math.ceil(filteredBookmarks.length / columns);
+
+  // 监听容器尺寸，便于虚拟化计算
+  useEffect(() => {
+    const wrapper = gridWrapperRef.current;
+    if (!wrapper) return;
+
+    const updateSize = () => {
+      const rect = wrapper.getBoundingClientRect();
+      setGridSize({
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
+    updateSize();
+
+    // 监听 wrapper 自身
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(wrapper);
+
+    // 同时监听 window resize
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateSize);
+    };
+  }, []);
+
+  useEffect(() => {
+    const resetDragState = () => {
+      setBookmarkDragIndex(null);
+      setBookmarkOverIndex(null);
+      dragBookmarkRef.current = null;
+    };
+
+    window.addEventListener('cleartab-bookmark-drop', resetDragState);
+    return () => {
+      window.removeEventListener('cleartab-bookmark-drop', resetDragState);
+    };
+  }, []);
+
+  const shouldVirtualize = useMemo(() => {
+    return !settings.enableBookmarkGrouping && gridSize.width > 0 && gridSize.height > 0 && filteredBookmarks.length > 60;
+  }, [settings.enableBookmarkGrouping, gridSize.width, gridSize.height, filteredBookmarks.length]);
 
   // 按分类分组的书签（仅在"全部"模式下使用，且启用了分组功能）
   const groupedBookmarks = useMemo(() => {
@@ -210,11 +283,19 @@ export function BookmarkGrid() {
       const bookmark = bookmarks.find(b => b.id === editingBookmark);
       if (bookmark) {
         // 添加到回收站
+        const metadataSnapshot =
+          mode === 'chrome' && (bookmark as any).chromeId
+            ? useBookmarkMetadataStore.getState().getMetadata((bookmark as any).chromeId)
+            : undefined;
+
         addToTrash({
           id: `trash-${Date.now()}`,
           type: 'bookmark',
           data: bookmark,
           deletedAt: Date.now(),
+          mode,
+          browserParentId: mode === 'chrome' && bookmark.categoryId !== 'all' ? bookmark.categoryId : undefined,
+          browserMetadata: metadataSnapshot ? { ...metadataSnapshot } : undefined,
         });
       }
       adapterDeleteBookmark(editingBookmark);
@@ -225,11 +306,19 @@ export function BookmarkGrid() {
   const handleDeleteBookmarkById = (bookmarkId: string) => {
     const bookmark = bookmarks.find(b => b.id === bookmarkId);
     if (bookmark) {
+      const metadataSnapshot =
+        mode === 'chrome' && (bookmark as any).chromeId
+          ? useBookmarkMetadataStore.getState().getMetadata((bookmark as any).chromeId)
+          : undefined;
+
       addToTrash({
         id: `trash-${Date.now()}`,
         type: 'bookmark',
         data: bookmark,
         deletedAt: Date.now(),
+        mode,
+        browserParentId: mode === 'chrome' && bookmark.categoryId !== 'all' ? bookmark.categoryId : undefined,
+        browserMetadata: metadataSnapshot ? { ...metadataSnapshot } : undefined,
       });
     }
     adapterDeleteBookmark(bookmarkId);
@@ -301,6 +390,7 @@ export function BookmarkGrid() {
           type: 'category',
           data: category,
           deletedAt: Date.now(),
+          mode: 'local',
           relatedBookmarks: categoryBookmarks,
         });
       }
@@ -356,13 +446,18 @@ export function BookmarkGrid() {
       try {
         const parsed = JSON.parse(jsonData);
         if (parsed.type === 'bookmark' && parsed.id) {
-          console.log('Moving bookmark to category:', parsed.id, '->', categories[dropIndex].id);
+          const targetCategoryId = categories[dropIndex].id;
+          console.log('Moving bookmark to category:', parsed.id, '->', targetCategoryId);
           if (mode === 'chrome') {
-            moveBookmarkToCategory(parsed.id, categories[dropIndex].id);
+            moveBookmarkToCategory(parsed.id, targetCategoryId);
           } else {
-            localStore.updateBookmark(parsed.id, { categoryId: categories[dropIndex].id });
+            localStore.updateBookmark(parsed.id, { categoryId: targetCategoryId });
           }
           setDragOverCategoryId(null);
+          setBookmarkDragIndex(null);
+          setBookmarkOverIndex(null);
+          dragBookmarkRef.current = null;
+          setActiveCategory(targetCategoryId);
           return;
         }
       } catch {
@@ -496,7 +591,7 @@ export function BookmarkGrid() {
     },
     {
       id: 'open-new-tab',
-      label: '新标签页打开',
+      label: t.common.openInNewTab,
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
@@ -558,6 +653,60 @@ export function BookmarkGrid() {
     ];
   };
 
+  const renderVirtualCell = useCallback(({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: CSSProperties }) => {
+    const itemIndex = rowIndex * columns + columnIndex;
+    if (itemIndex >= filteredBookmarks.length) return null;
+    const bookmark = filteredBookmarks[itemIndex];
+    const adjustedStyle: React.CSSProperties = {
+      ...style,
+      width: columnWidth,
+      height: CARD_HEIGHT,
+      top: (style.top as number) ?? 0,
+      left: ((style.left as number) ?? 0) + columnIndex * GRID_GAP,
+      boxSizing: 'border-box',
+    };
+
+    return (
+      <div style={adjustedStyle}>
+        <ContextMenu key={bookmark.id} items={getBookmarkContextMenuItems(bookmark.id)}>
+          <a
+            href={bookmark.url}
+            className={`${styles.card} ${bookmarkDragIndex === itemIndex ? styles.dragging : ''} ${bookmarkOverIndex === itemIndex ? styles.dragOver : ''}`}
+            onClick={() => handleBookmarkClick(bookmark.id)}
+            title={bookmark.title}
+            draggable
+            onDragStart={(e) => handleBookmarkDragStart(e, itemIndex, bookmark.id)}
+            onDragOver={(e) => handleBookmarkDragOver(e, itemIndex)}
+            onDragLeave={handleBookmarkDragLeave}
+            onDrop={(e) => handleBookmarkDrop(e, itemIndex)}
+            onDragEnd={handleBookmarkDragEnd}
+            style={{ height: CARD_HEIGHT }}
+          >
+            <div
+              className={styles.icon}
+              style={{ backgroundColor: bookmark.color }}
+            >
+              {bookmark.icon ? (
+                <img src={bookmark.icon} alt="" />
+              ) : (
+                <FaviconImage
+                  url={bookmark.url}
+                  title={bookmark.title}
+                  color={bookmark.color}
+                  size={40}
+                />
+              )}
+            </div>
+            <div className={styles.info}>
+              <span className={styles.title}>{bookmark.title}</span>
+              <span className={styles.domain}>{getDomain(bookmark.url)}</span>
+            </div>
+          </a>
+        </ContextMenu>
+      </div>
+    );
+  }, [filteredBookmarks, columns, columnWidth, rowHeight, rowCount, bookmarkDragIndex, bookmarkOverIndex, handleBookmarkClick, handleBookmarkDragStart, handleBookmarkDragOver, handleBookmarkDragLeave, handleBookmarkDrop, handleBookmarkDragEnd, getBookmarkContextMenuItems]);
+
   const SearchIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="11" cy="11" r="8"></circle>
@@ -575,96 +724,102 @@ export function BookmarkGrid() {
   return (
     <div className={styles.container}>
       {/* 头部：分类标签 + 操作按钮 */}
-      <div className={styles.header}>
-        <div className={styles.categories}>
-          {categories.map((category, index) => {
-            const isAll = category.id === 'all';
-            const isActive = activeCategory === category.id;
-            const isDragging = catDragIndex === index;
-            // 区分：分类排序拖拽 vs 书签拖入分类
-            const isCategoryDragOver = catOverIndex === index && catDragIndex !== null;
-            const isBookmarkDragOver = dragOverCategoryId === category.id;
+      {showCategories && (
+        <div className={styles.header}>
+          <div className={styles.categories}>
+            {categories.map((category, index) => {
+              const isAll = category.id === 'all';
+              const isActive = activeCategory === category.id;
+              const isDragging = catDragIndex === index;
+              // 区分：分类排序拖拽 vs 书签拖入分类
+              const isCategoryDragOver = catOverIndex === index && catDragIndex !== null;
+              const isBookmarkDragOver = dragOverCategoryId === category.id;
 
-            // 分类拖拽排序（两种模式都支持）
-            const isDraggable = !isAll;
+              // 分类拖拽排序（两种模式都支持）
+              const isDraggable = !isAll;
 
-            const categoryButton = (
-              <motion.button
-                key={category.id}
-                className={`${styles.categoryTab} ${
-                  isDragging ? styles.dragging : ''
-                } ${isCategoryDragOver ? styles.dragOver : ''
-                } ${isBookmarkDragOver ? styles.dragOverBookmark : ''}`}
-                onClick={() => setActiveCategory(category.id)}
-                draggable={isDraggable}
-                onDragStart={isDraggable ? (e) => handleCatDragStart(e as unknown as React.DragEvent, index) : undefined}
-                onDragOver={(e) => handleCatDragOver(e as unknown as React.DragEvent, index)}
-                onDragLeave={handleCatDragLeave}
-                onDrop={(e) => handleCatDrop(e as unknown as React.DragEvent, index)}
-                onDragEnd={handleCatDragEnd}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activePill"
-                    className={styles.activePill}
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <span className={styles.categoryText}>{category.name}</span>
-              </motion.button>
-            );
+              const categoryButton = (
+                <motion.button
+                  key={category.id}
+                  className={`${styles.categoryTab} ${
+                    isDragging ? styles.dragging : ''
+                  } ${isCategoryDragOver ? styles.dragOver : ''
+                  } ${isBookmarkDragOver ? styles.dragOverBookmark : ''}`}
+                  onClick={() => setActiveCategory(category.id)}
+                  draggable={isDraggable}
+                  onDragStart={isDraggable ? (e) => handleCatDragStart(e as unknown as React.DragEvent, index) : undefined}
+                  onDragOver={(e) => handleCatDragOver(e as unknown as React.DragEvent, index)}
+                  onDragLeave={handleCatDragLeave}
+                  onDrop={(e) => handleCatDrop(e as unknown as React.DragEvent, index)}
+                  onDragEnd={handleCatDragEnd}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activePill"
+                      className={styles.activePill}
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <span className={styles.categoryText}>{category.name}</span>
+                </motion.button>
+              );
 
-            if (isAll) {
-              return categoryButton;
-            }
+              if (isAll) {
+                return categoryButton;
+              }
 
-            // 所有分类都支持右键菜单
-            return (
-              <ContextMenu key={category.id} items={getCategoryContextMenuItems(category.id)}>
-                {categoryButton}
-              </ContextMenu>
-            );
-          })}
-          {/* 添加分类按钮（两种模式都支持） */}
-          <button
-            className={styles.addCategoryButton}
-            onClick={() => setIsAddCategoryOpen(true)}
-            title={t.common.add}
-          >
-            +
-          </button>
-        </div>
-        <div className={styles.actions}>
-          <div className={styles.searchBox}>
-            <span className={styles.searchIcon}>{SearchIcon}</span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.common.search}
-              className={styles.searchInput}
-            />
-            {searchQuery && (
-              <button
-                className={styles.clearSearch}
-                onClick={() => setSearchQuery('')}
-              >
-                {CloseIcon}
-              </button>
-            )}
+              // 所有分类都支持右键菜单
+              return (
+                <ContextMenu key={category.id} items={getCategoryContextMenuItems(category.id)}>
+                  {categoryButton}
+                </ContextMenu>
+              );
+            })}
+            {/* 添加分类按钮（两种模式都支持） */}
+            <button
+              className={styles.addCategoryButton}
+              onClick={() => setIsAddCategoryOpen(true)}
+              title={t.common.add}
+            >
+              +
+            </button>
           </div>
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            + {t.common.add}
-          </Button>
+          <div className={styles.actions}>
+            <div className={styles.searchBox}>
+              <span className={styles.searchIcon}>{SearchIcon}</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.common.search}
+                className={styles.searchInput}
+              />
+              {searchQuery && (
+                <button
+                  className={styles.clearSearch}
+                  onClick={() => setSearchQuery('')}
+                >
+                  {CloseIcon}
+                </button>
+              )}
+            </div>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              + {t.common.add}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 书签网格 */}
-      <div className={styles.gridWrapper}>
+      <div
+        className={styles.gridWrapper}
+        ref={gridWrapperRef}
+        style={shouldVirtualize ? { overflow: 'hidden', width: '100%' } : undefined}
+      >
         {/* 加载状态 */}
         {isLoading && (
           <div className={styles.empty}>
@@ -680,7 +835,7 @@ export function BookmarkGrid() {
         )}
 
         {/* 分组显示模式 */}
-        {!isLoading && !error && groupedBookmarks ? (
+        {!isLoading && !error && groupedBookmarks && (
           <div className={styles.groupContainer}>
             {groupedBookmarks.length === 0 ? (
               <div className={styles.empty}>
@@ -740,52 +895,72 @@ export function BookmarkGrid() {
               })
             )}
           </div>
-        ) : (
-          /* 普通网格模式 */
-          <div className={styles.grid}>
-            {filteredBookmarks.length === 0 ? (
-              <div className={styles.empty}>
-                <p>{t.common.noData}</p>
-              </div>
-            ) : (
-              filteredBookmarks.map((bookmark, index) => (
-                <ContextMenu key={bookmark.id} items={getBookmarkContextMenuItems(bookmark.id)}>
-                  <a
-                    href={bookmark.url}
-                    className={`${styles.card} ${bookmarkDragIndex === index ? styles.dragging : ''} ${bookmarkOverIndex === index ? styles.dragOver : ''}`}
-                    onClick={() => handleBookmarkClick(bookmark.id)}
-                    title={bookmark.title}
-                    draggable
-                    onDragStart={(e) => handleBookmarkDragStart(e, index, bookmark.id)}
-                    onDragOver={(e) => handleBookmarkDragOver(e, index)}
-                    onDragLeave={handleBookmarkDragLeave}
-                    onDrop={(e) => handleBookmarkDrop(e, index)}
-                    onDragEnd={handleBookmarkDragEnd}
-                  >
-                    <div
-                      className={styles.icon}
-                      style={{ backgroundColor: bookmark.color }}
+        )}
+
+        {/* 普通网格模式 */}
+        {!isLoading && !error && !groupedBookmarks && (
+          shouldVirtualize ? (
+            <FixedSizeGrid
+              className={styles.virtualGrid}
+              columnCount={columns}
+              columnWidth={columnWidth}
+              height={gridSize.height || 400}
+              rowCount={rowCount}
+              rowHeight={rowHeight}
+              width={gridWrapperRef.current?.getBoundingClientRect().width || gridSize.width || 800}
+              itemKey={({ columnIndex, rowIndex }) => {
+                const idx = rowIndex * columns + columnIndex;
+                return filteredBookmarks[idx]?.id ?? `empty-${idx}`;
+              }}
+            >
+              {renderVirtualCell}
+            </FixedSizeGrid>
+          ) : (
+            <div className={styles.grid}>
+              {filteredBookmarks.length === 0 ? (
+                <div className={styles.empty}>
+                  <p>{t.common.noData}</p>
+                </div>
+              ) : (
+                filteredBookmarks.map((bookmark, index) => (
+                  <ContextMenu key={bookmark.id} items={getBookmarkContextMenuItems(bookmark.id)}>
+                    <a
+                      href={bookmark.url}
+                      className={`${styles.card} ${bookmarkDragIndex === index ? styles.dragging : ''} ${bookmarkOverIndex === index ? styles.dragOver : ''}`}
+                      onClick={() => handleBookmarkClick(bookmark.id)}
+                      title={bookmark.title}
+                      draggable
+                      onDragStart={(e) => handleBookmarkDragStart(e, index, bookmark.id)}
+                      onDragOver={(e) => handleBookmarkDragOver(e, index)}
+                      onDragLeave={handleBookmarkDragLeave}
+                      onDrop={(e) => handleBookmarkDrop(e, index)}
+                      onDragEnd={handleBookmarkDragEnd}
                     >
-                      {bookmark.icon ? (
-                        <img src={bookmark.icon} alt="" />
-                      ) : (
-                        <FaviconImage
-                          url={bookmark.url}
-                          title={bookmark.title}
-                          color={bookmark.color}
-                          size={40}
-                        />
-                      )}
-                    </div>
-                    <div className={styles.info}>
-                      <span className={styles.title}>{bookmark.title}</span>
-                      <span className={styles.domain}>{getDomain(bookmark.url)}</span>
-                    </div>
-                  </a>
-                </ContextMenu>
-              ))
-            )}
-          </div>
+                      <div
+                        className={styles.icon}
+                        style={{ backgroundColor: bookmark.color }}
+                      >
+                        {bookmark.icon ? (
+                          <img src={bookmark.icon} alt="" />
+                        ) : (
+                          <FaviconImage
+                            url={bookmark.url}
+                            title={bookmark.title}
+                            color={bookmark.color}
+                            size={40}
+                          />
+                        )}
+                      </div>
+                      <div className={styles.info}>
+                        <span className={styles.title}>{bookmark.title}</span>
+                        <span className={styles.domain}>{getDomain(bookmark.url)}</span>
+                      </div>
+                    </a>
+                  </ContextMenu>
+                ))
+              )}
+            </div>
+          )
         )}
       </div>
 
@@ -847,13 +1022,13 @@ export function BookmarkGrid() {
             performDeleteCategory(deleteCategoryConfirm.categoryId);
           }
         }}
-        title="删除分类"
+        title={t.bookmarks.deleteCategoryTitle}
         message={mode === 'chrome'
-          ? `该分类下有 ${deleteCategoryConfirm?.bookmarkCount || 0} 个书签，删除后书签和文件夹都会从 Chrome 书签中删除。确定要删除吗？`
-          : `该分类下有 ${deleteCategoryConfirm?.bookmarkCount || 0} 个书签，删除后书签也会被移入回收站。确定要删除吗？`
+          ? t.bookmarks.deleteCategoryConfirmChrome.replace('{count}', String(deleteCategoryConfirm?.bookmarkCount || 0))
+          : t.bookmarks.deleteCategoryConfirmLocal.replace('{count}', String(deleteCategoryConfirm?.bookmarkCount || 0))
         }
-        confirmText="删除"
-        cancelText="取消"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
         danger
       />
     </div>

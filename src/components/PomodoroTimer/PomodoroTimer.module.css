@@ -1,0 +1,250 @@
+/* 透明圆形钟表 */
+.clock {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  /* 默认颜色变量 */
+  --tick-color: rgba(255, 255, 255, 0.4);
+  --tick-color-major: rgba(255, 255, 255, 0.6);
+  --text-color: #fff;
+  --btn-bg: rgba(0, 0, 0, 0.6);
+  --btn-bg-hover: rgba(0, 0, 0, 0.8);
+  --btn-border: rgba(255, 255, 255, 0.1);
+  --btn-color: rgba(255, 255, 255, 0.8);
+  --close-btn-bg: rgba(0, 0, 0, 0.5);
+  --ring-bg: rgba(255, 255, 255, 0.15);
+}
+
+.clock:active {
+  cursor: grabbing;
+}
+
+/* 工作/休息模式颜色 - 使用主题色 */
+.clock.workMode {
+  --clock-color: var(--accent-primary);
+}
+
+.clock.breakMode {
+  --clock-color: #10b981;
+}
+
+/* 亮色主题 */
+:global([data-theme="light"]) .clock {
+  --tick-color: rgba(0, 0, 0, 0.25);
+  --tick-color-major: rgba(0, 0, 0, 0.4);
+  --text-color: #1f2937;
+  --btn-bg: rgba(255, 255, 255, 0.8);
+  --btn-bg-hover: rgba(255, 255, 255, 0.95);
+  --btn-border: rgba(0, 0, 0, 0.1);
+  --btn-color: rgba(0, 0, 0, 0.7);
+  --close-btn-bg: rgba(255, 255, 255, 0.8);
+  --ring-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* 进度环 */
+.ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.ringBg {
+  stroke: var(--ring-bg);
+}
+
+.ringProgress {
+  stroke: var(--clock-color);
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* 刻度容器 */
+.ticks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* 5秒刻度线（12个） */
+.tick {
+  position: absolute;
+  width: 2px;
+  height: 6px;
+  background: var(--tick-color);
+  left: 50%;
+  top: 6px;
+  transform-origin: 50% 64px;
+  margin-left: -1px;
+  border-radius: 1px;
+}
+
+.tick:nth-child(3n+1) {
+  height: 8px;
+  background: var(--tick-color-major);
+}
+
+/* 秒刻度线 - 主刻度（每5秒） */
+.tickMajor {
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  background: var(--tick-color-major);
+  left: 50%;
+  top: 6px;
+  transform-origin: 50% 64px;
+  margin-left: -1px;
+  border-radius: 1px;
+}
+
+/* 秒刻度线 - 次刻度（每1秒） */
+.tickMinor {
+  position: absolute;
+  width: 1px;
+  height: 4px;
+  background: var(--tick-color);
+  left: 50%;
+  top: 8px;
+  transform-origin: 50% 62px;
+  margin-left: -0.5px;
+  border-radius: 1px;
+}
+
+/* 秒针 */
+.secondHand {
+  position: absolute;
+  width: 1.5px;
+  height: 50px;
+  background: var(--clock-color);
+  bottom: 50%;
+  left: 50%;
+  margin-left: -0.75px;
+  transform-origin: bottom center;
+  transition: transform 0.2s linear;
+  border-radius: 1px;
+  opacity: 0.8;
+}
+
+/* 中心点 */
+.centerDot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--clock-color);
+  border-radius: 50%;
+}
+
+/* 时间显示 */
+.time {
+  position: absolute;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  color: var(--text-color);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+  margin-top: -8px;
+}
+
+/* 状态标签 */
+.status {
+  position: absolute;
+  top: 26px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--clock-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 关闭按钮 - 右上角 */
+.closeBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--close-btn-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--btn-border);
+  border-radius: 50%;
+  color: var(--btn-color);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.clock:hover .closeBtn {
+  opacity: 1;
+}
+
+.closeBtn:hover {
+  background: rgba(239, 68, 68, 0.8);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* 按钮组 - 钟表内部底部 */
+.buttons {
+  position: absolute;
+  bottom: 22px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(4px);
+}
+
+.clock:hover .buttons {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--btn-border);
+  border-radius: 50%;
+  color: var(--btn-color);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text-color);
+  transform: scale(1.1);
+}
+
+.btn.mainBtn {
+  width: 28px;
+  height: 28px;
+  background: var(--clock-color);
+  border-color: var(--clock-color);
+  color: #fff;
+}
+
+.btn.mainBtn:hover {
+  background: var(--clock-color);
+  filter: brightness(1.1);
+}

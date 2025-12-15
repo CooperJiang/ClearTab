@@ -267,6 +267,28 @@
 }
 
 /* 搜索历史面板 */
+@keyframes historyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes historyFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
 .historyPanel {
   position: absolute;
   top: calc(100% + 8px);
@@ -279,12 +301,12 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
   z-index: 1000;
-  animation: panelFadeIn 0.15s ease;
+  animation: historyFadeIn 0.15s ease;
   overflow: hidden;
 }
 
 .historyPanel.closing {
-  animation: panelFadeOut 0.15s ease forwards;
+  animation: historyFadeOut 0.15s ease forwards;
 }
 
 .historyHeader {

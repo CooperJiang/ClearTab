@@ -14,7 +14,10 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  width: 100%;
   animation: fadeInUp 0.5s ease 0.2s backwards;
+  margin-top: 8px;
 }
 
 .header {
@@ -202,16 +205,37 @@
 .gridWrapper {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
-  padding-right: 8px;
-  margin-right: -8px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  width: 100%;
+}
+
+.gridWrapper::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+.virtualGrid {
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.virtualGrid::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
+  grid-auto-rows: 70px;
   padding-bottom: 16px;
+  width: 100%;
 }
 
 .card {
@@ -219,7 +243,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px;
   background: var(--bg-card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -228,6 +252,7 @@
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   overflow: hidden;
   -webkit-mask-image: -webkit-radial-gradient(white, black);
+  height: 100%;
 }
 
 .card::before {
@@ -259,7 +284,6 @@
 .card:hover {
   background: var(--bg-hover);
   border-color: var(--card-hover-border);
-  transform: scale(1.03);
 }
 
 .card:hover::before {
@@ -447,7 +471,7 @@
   flex: 1;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   letter-spacing: 0.5px;
 }
 
@@ -463,13 +487,14 @@
 
 .groupContent {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
   padding-top: 8px;
   max-height: 10000px;
   overflow: hidden;
   transition: all 0.3s ease;
   opacity: 1;
+  width: 100%;
 }
 
 .groupContent.collapsed {

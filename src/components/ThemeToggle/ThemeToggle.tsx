@@ -1,8 +1,10 @@
 import { useSettingsStore } from '../../stores';
+import { useTranslation } from '../../i18n';
 import styles from './ThemeToggle.module.css';
 
 export function ThemeToggle() {
   const { settings, updateSettings } = useSettingsStore();
+  const { t } = useTranslation();
   const isDark = settings.themeMode === 'dark';
 
   const toggleTheme = () => {
@@ -13,7 +15,7 @@ export function ThemeToggle() {
     <button
       className={styles.toggle}
       onClick={toggleTheme}
-      title={isDark ? '切换到亮色模式' : '切换到暗色模式'}
+      title={isDark ? t.themeToggle.toLight : t.themeToggle.toDark}
     >
       {isDark ? (
         // 太阳图标

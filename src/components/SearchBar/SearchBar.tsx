@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, type CSSProperties } from 'react';
 import { getEnabledEngines, getAllEngines } from '../../types';
 import { useSettingsStore, useSearchHistoryStore } from '../../stores';
 import { SearchEngineModal } from '../SearchEngineModal';
@@ -17,6 +17,17 @@ export function SearchBar() {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 搜索栏自定义样式
+  const containerStyle: CSSProperties = {
+    maxWidth: settings.searchBarWidth ?? 560,
+  };
+
+  const searchBarStyle: CSSProperties = {
+    height: settings.searchBarHeight ?? 44,
+    borderRadius: settings.searchBarBorderRadius ?? 10,
+    opacity: settings.searchBarOpacity ?? 1,
+  };
 
   // 获取所有引擎（包含自定义）
   const allEngines = getAllEngines(settings.customSearchEngines);
@@ -124,7 +135,7 @@ export function SearchBar() {
 
   // 输入框获得焦点时显示历史
   const handleInputFocus = () => {
-    if (history.length > 0 && !isPanelOpen) {
+    if (settings.showSearchHistory && history.length > 0 && !isPanelOpen) {
       setIsHistoryOpen(true);
     }
   };
@@ -132,7 +143,7 @@ export function SearchBar() {
   // 输入框内容变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
-    if (!isHistoryOpen && history.length > 0 && !isPanelOpen) {
+    if (settings.showSearchHistory && !isHistoryOpen && history.length > 0 && !isPanelOpen) {
       setIsHistoryOpen(true);
     }
   };
@@ -174,8 +185,8 @@ export function SearchBar() {
   };
 
   return (
-    <div className={styles.searchContainer} ref={containerRef}>
-      <form className={styles.searchBar} onSubmit={handleSearch}>
+    <div className={styles.searchContainer} ref={containerRef} style={containerStyle}>
+      <form className={styles.searchBar} onSubmit={handleSearch} style={searchBarStyle}>
         <button
           type="button"
           className={styles.engineButton}
@@ -250,10 +261,10 @@ export function SearchBar() {
       )}
 
       {/* 搜索历史面板 */}
-      {isHistoryOpen && filteredHistory.length > 0 && (
+      {settings.showSearchHistory && isHistoryOpen && filteredHistory.length > 0 && (
         <div className={`${styles.historyPanel} ${isHistoryClosing ? styles.closing : ''}`}>
           <div className={styles.historyHeader}>
-            <span className={styles.historyTitle}>搜索历史</span>
+            <span className={styles.historyTitle}>{t.search.historyTitle}</span>
             <button
               type="button"
               className={styles.clearHistoryButton}
@@ -262,7 +273,7 @@ export function SearchBar() {
                 closeHistory();
               }}
             >
-              清空
+              {t.search.clearHistory}
             </button>
           </div>
           <div className={styles.historyList}>

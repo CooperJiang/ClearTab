@@ -1,14 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Bookmark, Category } from '../types';
+import type { BookmarkMode } from '../hooks/useBookmarkAdapter';
+import type { BookmarkMetadata } from './useBookmarkMetadataStore';
 
 export interface TrashItem {
   id: string;
   type: 'bookmark' | 'category';
   data: Bookmark | Category;
   deletedAt: number;
+  mode: BookmarkMode;
   // 分类删除时，保存其下的书签
   relatedBookmarks?: Bookmark[];
+  browserParentId?: string;
+  browserMetadata?: BookmarkMetadata;
 }
 
 export interface TrashSettings {
@@ -25,8 +30,8 @@ interface TrashState {
   // Actions
   addToTrash: (item: TrashItem) => void;
   removeFromTrash: (id: string) => void;
-  clearTrash: () => void;
   restoreItem: (id: string) => TrashItem | null;
+  clearTrash: () => void;
   cleanExpiredItems: () => void;
   updateSettings: (settings: Partial<TrashSettings>) => void;
   getExpiredItems: () => TrashItem[];
@@ -63,18 +68,18 @@ export const useTrashStore = create<TrashState>()(
           items: state.items.filter((item) => item.id !== id),
         })),
 
-      clearTrash: () => set({ items: [] }),
-
       restoreItem: (id) => {
-        const item = get().items.find((i) => i.id === id);
+        const state = get();
+        const item = state.items.find((trashItem) => trashItem.id === id) || null;
         if (item) {
-          set((state) => ({
-            items: state.items.filter((i) => i.id !== id),
-          }));
-          return item;
+          set({
+            items: state.items.filter((trashItem) => trashItem.id !== id),
+          });
         }
-        return null;
+        return item;
       },
+
+      clearTrash: () => set({ items: [] }),
 
       cleanExpiredItems: () => {
         const { settings, items } = get();

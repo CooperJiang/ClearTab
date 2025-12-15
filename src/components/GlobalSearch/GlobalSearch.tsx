@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useBookmarkStore, useQuickLinkStore } from '../../stores';
-import { getFaviconUrl } from '../../utils';
+import { FaviconImage } from '../FaviconImage';
 import { useTranslation } from '../../i18n';
 import styles from './GlobalSearch.module.css';
 
@@ -155,7 +155,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                 onMouseEnter={() => setSelectedIndex(index)}
               >
                 <div className={styles.itemIcon}>
-                  <img src={item.icon || getFaviconUrl(item.url)} alt="" />
+                  <FaviconImage url={item.url} title={item.title} size={24} />
                 </div>
                 <div className={styles.itemInfo}>
                   <span className={styles.itemTitle}>{item.title}</span>

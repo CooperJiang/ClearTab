@@ -1,9 +1,12 @@
 import { useMemo } from 'react';
-import { useTrashStore, useBookmarkStore } from '../../stores';
+import { useTrashStore, useBookmarkStore, useBookmarkMetadataStore, useSettingsStore } from '../../stores';
 import { Button, Switch, Select } from '../ui';
 import { useTranslation } from '../../i18n';
 import type { Bookmark, Category } from '../../types';
 import type { TrashItem } from '../../stores/useTrashStore';
+import { useToast } from '../ui/Toast';
+import ChromeBookmarkService from '../../services/chromeBookmarkService';
+import type { BookmarkMode } from '../../hooks/useBookmarkAdapter';
 import styles from './TrashPanel.module.css';
 
 // 按天分组的类型
@@ -14,9 +17,15 @@ interface DayGroup {
 }
 
 export function TrashPanel() {
-  const { items, settings, updateSettings, removeFromTrash, restoreItem, clearTrash, cleanExpiredItems } = useTrashStore();
+  const { items, settings, updateSettings, addToTrash, removeFromTrash, restoreItem, clearTrash, cleanExpiredItems } = useTrashStore();
   const { addBookmark, addCategory } = useBookmarkStore();
+  const setBookmarkMetadata = useBookmarkMetadataStore((state) => state.setMetadata);
+  const activeBookmarkMode = useSettingsStore(
+    (state) => (state.settings.bookmarkMode as BookmarkMode) || 'chrome'
+  );
   const { t } = useTranslation();
+  const { showToast } = useToast();
+  const browserApiAvailable = ChromeBookmarkService.isAvailable();
 
   // 清理过期项目
   useMemo(() => {
@@ -48,12 +57,17 @@ export function TrashPanel() {
     }
   };
 
+  const filteredItems = useMemo(
+    () => items.filter((item) => item.mode === activeBookmarkMode),
+    [items, activeBookmarkMode]
+  );
+
   // 按天分组
   const groupedItems = useMemo((): DayGroup[] => {
     const groups: Map<string, TrashItem[]> = new Map();
 
     // 按删除日期分组
-    items.forEach((item) => {
+    filteredItems.forEach((item) => {
       const date = new Date(item.deletedAt);
       const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
@@ -81,41 +95,100 @@ export function TrashPanel() {
       const dateB = new Date(b.date.replace(/-/g, '/')).getTime();
       return dateB - dateA;
     });
-  }, [items, t]);
+  }, [filteredItems, t]);
 
-  // 恢复单个项目
-  const handleRestore = (id: string) => {
-    const item = restoreItem(id);
-    if (!item) return;
+  const restoreBrowserBookmark = async (item: TrashItem): Promise<boolean> => {
+    const bookmark = item.data as Bookmark;
+    if (!browserApiAvailable) {
+      showToast(t.settings.trash.browserUnavailable, 'error');
+      return false;
+    }
 
+    if (!bookmark.url) {
+      showToast(t.settings.trash.browserMissingUrl, 'error');
+      return false;
+    }
+
+    const parentId =
+      item.browserParentId && item.browserParentId !== 'all' ? item.browserParentId : undefined;
+
+    try {
+      const created = await ChromeBookmarkService.addBookmark(
+        bookmark.title,
+        bookmark.url,
+        parentId || '1'
+      );
+
+      if (item.browserMetadata) {
+        const { chromeId: _oldId, ...metadata } = item.browserMetadata;
+        setBookmarkMetadata(created.id, {
+          ...metadata,
+          chromeId: created.id,
+        });
+      }
+
+      return true;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error || t.settings.trash.browserRestoreFailed);
+      showToast(`${t.settings.trash.browserRestoreFailed}: ${message}`, 'error');
+      return false;
+    }
+  };
+
+  const restoreTrashItem = async (item: TrashItem): Promise<boolean> => {
     if (item.type === 'bookmark') {
+      if (item.mode === 'chrome') {
+        return restoreBrowserBookmark(item);
+      }
       addBookmark(item.data as Bookmark);
-    } else if (item.type === 'category') {
+      return true;
+    }
+
+    if (item.type === 'category') {
+      if (item.mode === 'chrome') {
+        showToast(t.settings.trash.browserCategoryUnsupported, 'warning');
+        return false;
+      }
+
       const category = item.data as Category;
       addCategory(category);
-      // 恢复相关书签
-      if (item.relatedBookmarks) {
+      if (item.relatedBookmarks?.length) {
         item.relatedBookmarks.forEach((bookmark) => {
           addBookmark(bookmark);
         });
       }
+      return true;
+    }
+
+    return false;
+  };
+
+  // 恢复单个项目
+  const handleRestore = async (id: string) => {
+    const item = restoreItem(id);
+    if (!item) return;
+
+    const success = await restoreTrashItem(item);
+    if (!success) {
+      addToTrash(item);
     }
   };
 
   // 恢复一组项目（按天）
-  const handleRestoreGroup = (groupItems: TrashItem[]) => {
-    groupItems.forEach((item) => {
-      handleRestore(item.id);
-    });
+  const handleRestoreGroup = async (groupItems: TrashItem[]) => {
+    for (const item of groupItems) {
+      await handleRestore(item.id);
+    }
   };
 
   // 恢复全部
-  const handleRestoreAll = () => {
+  const handleRestoreAll = async () => {
     // 复制一份，因为恢复会修改原数组
-    const allItems = [...items];
-    allItems.forEach((item) => {
-      handleRestore(item.id);
-    });
+    const allItems = [...filteredItems];
+    for (const item of allItems) {
+      await handleRestore(item.id);
+    }
   };
 
   // 永久删除
@@ -188,13 +261,13 @@ export function TrashPanel() {
       {/* 回收站内容 */}
       <div className={styles.trashSection}>
         <div className={styles.trashHeader}>
-          <h4 className={styles.sectionTitle}>{t.settings.trash.content} ({items.length})</h4>
-          {items.length > 0 && (
+          <h4 className={styles.sectionTitle}>{t.settings.trash.content} ({filteredItems.length})</h4>
+          {filteredItems.length > 0 && (
             <div className={styles.headerActions}>
               <Button
                 variant="secondary"
                 size="small"
-                onClick={handleRestoreAll}
+                onClick={() => void handleRestoreAll()}
               >
                 {t.settings.trash.restoreAll}
               </Button>
@@ -209,7 +282,7 @@ export function TrashPanel() {
           )}
         </div>
 
-        {items.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className={styles.emptyState}>
             <svg
               width="48"
@@ -233,7 +306,7 @@ export function TrashPanel() {
                   <span className={styles.dayCount}>{group.items.length} {t.settings.trash.itemsCount}</span>
                   <button
                     className={styles.restoreGroupButton}
-                    onClick={() => handleRestoreGroup(group.items)}
+                    onClick={() => void handleRestoreGroup(group.items)}
                     title={t.settings.trash.restoreDay}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -276,8 +349,13 @@ export function TrashPanel() {
                       <div className={styles.itemActions}>
                         <button
                           className={styles.restoreButton}
-                          onClick={() => handleRestore(item.id)}
-                          title={t.settings.trash.restore}
+                          onClick={() => void handleRestore(item.id)}
+                          title={
+                            item.mode === 'chrome' && !browserApiAvailable
+                              ? t.settings.trash.browserUnavailable
+                              : t.settings.trash.restore
+                          }
+                          disabled={item.mode === 'chrome' && !browserApiAvailable}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="1 4 1 10 7 10" />

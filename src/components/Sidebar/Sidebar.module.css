@@ -1,0 +1,274 @@
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 16px 12px;
+  background: linear-gradient(
+    180deg,
+    var(--bg-primary) 0%,
+    color-mix(in srgb, var(--bg-primary) 95%, var(--accent-primary)) 100%
+  );
+  border-right: 1px solid var(--border-color);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 1px 0 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.resizing {
+  transition: none;
+}
+
+.sidebar.collapsed {
+  padding: 8px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  overflow: visible;
+}
+
+.sidebar.collapsed .header {
+  justify-content: center;
+  border-bottom: none;
+  padding-bottom: 8px;
+}
+
+.logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  transition: font-size 0.15s ease, letter-spacing 0.15s ease;
+}
+
+.logo.collapsed {
+  font-size: 22px;
+  letter-spacing: normal;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  padding: 8px 12px 6px;
+  white-space: nowrap;
+  opacity: 0.7;
+  max-height: 30px;
+  transition: opacity 0.1s ease, max-height 0.1s ease, padding 0.1s ease;
+}
+
+.sectionTitle.collapsed {
+  opacity: 0;
+  max-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  width: 100%;
+  text-align: left;
+  min-height: 38px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background-color 0.15s ease,
+              color 0.15s ease,
+              border-color 0.15s ease,
+              box-shadow 0.15s ease,
+              transform 0.1s ease,
+              padding 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              gap 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navItem:hover {
+  background-color: var(--bg-hover);
+  transform: translateX(2px);
+}
+
+.navItem.active {
+  color: var(--accent-primary);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent-primary) 15%, transparent) 0%,
+    color-mix(in srgb, var(--accent-primary) 8%, transparent) 100%);
+  border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-primary) 15%, transparent),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.navItem.active .navItemName {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.navItem.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent-primary) 0%, color-mix(in srgb, var(--accent-primary) 70%, var(--text-primary)) 100%);
+  border-radius: 0 3px 3px 0;
+}
+
+.sidebar.collapsed .navItem {
+  padding: 6px;
+}
+
+/* 快捷访问和最近访问折叠时只显示图标 */
+.sidebar.collapsed .navItem.iconOnly {
+  justify-content: center;
+}
+
+.sidebar.collapsed .navItem.iconOnly .navItemName {
+  display: none;
+}
+
+/* 分类折叠时显示名称省略号 */
+.sidebar.collapsed .navItem:not(.iconOnly) .navItemName {
+  display: block;
+  text-align: center;
+}
+
+.navItemName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  transition: opacity 0.1s ease, font-size 0.15s ease, color 0.1s ease;
+}
+
+.sidebar.collapsed .navItemName {
+  display: none;
+}
+
+.collapseButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease,
+              color 0.15s ease,
+              border-color 0.15s ease,
+              transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.collapseButton:hover {
+  background-color: var(--bg-card);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: scale(1.05);
+}
+
+.collapseIcon {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 拖拽样式 */
+.navItem.dragging {
+  opacity: 0.5;
+  background-color: var(--bg-hover);
+}
+
+.navItem.dragOver {
+  background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  border-color: var(--accent-primary);
+}
+
+/* 宽度调整手柄 */
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.resizeHandle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  background-color: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.resizeHandle:hover::before {
+  background-color: var(--accent-primary);
+}
+
+.sidebar.resizing .resizeHandle::before {
+  background-color: var(--accent-primary);
+}
