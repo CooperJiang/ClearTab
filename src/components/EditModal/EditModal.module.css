@@ -21,6 +21,16 @@
   margin-left: 2px;
 }
 
+.error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .actions {
   display: flex;
   align-items: center;

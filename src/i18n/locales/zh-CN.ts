@@ -17,6 +17,11 @@ export const zhCN: TranslationSchema = {
     search: '搜索',
     loading: '加载中...',
     noData: '暂无数据',
+    close: '关闭',
+    saving: '保存中…',
+    saveFailed: '保存失败，请重试',
+    requiredField: '请填写或选择{field}',
+    invalidUrl: '请输入有效的网址',
   },
 
   settings: {
@@ -151,7 +156,8 @@ export const zhCN: TranslationSchema = {
   },
 
   search: {
-    placeholder: '搜索或输入网址',
+    globalPlaceholder: '搜索书签和快捷访问',
+    placeholder: '搜索网页',
     historyTitle: '搜索历史',
     clearHistory: '清空',
     engineModal: {
@@ -178,13 +184,14 @@ export const zhCN: TranslationSchema = {
 
   bookmarks: {
     title: '书签',
+    uncategorized: '未分类',
     addBookmark: '添加书签',
     editBookmark: '编辑书签',
     deleteConfirm: '确定删除此书签吗？',
     addCategory: '添加分类',
     editCategory: '编辑分类',
     deleteCategoryTitle: '删除分类',
-    deleteCategoryConfirmChrome: '该分类下有 {count} 个书签，删除后书签和文件夹都会从 Chrome 书签中删除。确定要删除吗？',
+    deleteCategoryConfirmChrome: '此文件夹及其中的全部书签和子文件夹都会从浏览器中删除，且无法通过本应用的回收站恢复。确定要删除吗？',
     deleteCategoryConfirmLocal: '该分类下有 {count} 个书签，删除后书签也会被移入回收站。确定要删除吗？',
     form: {
       title: '标题',

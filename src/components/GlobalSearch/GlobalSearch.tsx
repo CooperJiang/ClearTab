@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { useBookmarkStore, useQuickLinkStore } from '../../stores';
+import { useBookmarkStore, useQuickLinkStore, useRecentVisitsStore, useSettingsStore } from '../../stores';
+import { useBookmarkAdapter } from '../../hooks/useBookmarkAdapter';
 import { FaviconImage } from '../FaviconImage';
 import { useTranslation } from '../../i18n';
 import styles from './GlobalSearch.module.css';
@@ -25,8 +26,12 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
-  const { bookmarks } = useBookmarkStore();
+  const { bookmarks, mode, isLoading, error } = useBookmarkAdapter();
   const { quickLinks } = useQuickLinkStore();
+  const addVisit = useRecentVisitsStore(state => state.addVisit);
+  const incrementVisitCount = useBookmarkStore(state => state.incrementVisitCount);
+  const recentVisitsMode = useSettingsStore(state => state.settings.recentVisitsMode);
+  const resultsId = useId();
 
   // 合并所有可搜索项
   const allItems: SearchItem[] = useMemo(() => {
@@ -59,7 +64,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const filteredItems = useMemo(() => {
     if (!query.trim()) return allItems.slice(0, 10);
 
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.trim().toLowerCase();
     return allItems
       .filter(item =>
         item.title.toLowerCase().includes(lowerQuery) ||
@@ -67,63 +72,76 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       )
       .slice(0, 10);
   }, [query, allItems]);
+  const activeIndex = Math.max(0, Math.min(selectedIndex, filteredItems.length - 1));
+
+  const trackVisit = (item: SearchItem) => {
+    if (recentVisitsMode === 'custom') addVisit(item.url, item.title);
+    if (mode === 'local' && item.type === 'bookmark') incrementVisitCount(item.id);
+  };
 
   // 打开时聚焦输入框
   useEffect(() => {
     if (isOpen) {
+      const previousFocus = document.activeElement as HTMLElement | null;
       setQuery('');
       setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      inputRef.current?.focus();
+      return () => { if (previousFocus?.isConnected) previousFocus.focus(); };
     }
   }, [isOpen]);
 
   // 键盘导航
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return;
 
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex(i => Math.min(i + 1, filteredItems.length - 1));
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex(i => Math.max(i - 1, 0));
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (filteredItems[selectedIndex]) {
-            window.location.href = filteredItems[selectedIndex].url;
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          onClose();
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, filteredItems, selectedIndex, onClose]);
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(Math.min(activeIndex + 1, Math.max(0, filteredItems.length - 1)));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(Math.max(activeIndex - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (filteredItems[activeIndex]) {
+          trackVisit(filteredItems[activeIndex]);
+          window.location.href = filteredItems[activeIndex].url;
+        }
+        break;
+    }
+  };
 
   // 滚动选中项到可视区域
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
 
-    const selectedEl = list.children[selectedIndex] as HTMLElement;
+    const selectedEl = list.children[activeIndex] as HTMLElement;
     if (selectedEl) {
       selectedEl.scrollIntoView({ block: 'nearest' });
     }
-  }, [selectedIndex]);
+  }, [activeIndex]);
 
   if (!isOpen) return null;
 
   return createPortal(
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.container} onClick={e => e.stopPropagation()}>
+      <div
+        className={styles.container}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.search.globalPlaceholder}
+        onClick={e => e.stopPropagation()}
+        onKeyDown={e => {
+          if (e.key === 'Escape' && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }
+        }}
+      >
         <div className={styles.inputWrapper}>
           <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8"></circle>
@@ -133,7 +151,14 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             ref={inputRef}
             type="text"
             className={styles.input}
-            placeholder={t.search.placeholder}
+            placeholder={t.search.globalPlaceholder}
+            aria-label={t.search.globalPlaceholder}
+            role="combobox"
+            aria-expanded="true"
+            aria-controls={resultsId}
+            aria-autocomplete="list"
+            aria-activedescendant={filteredItems.length ? `${resultsId}-${activeIndex}` : undefined}
+            onKeyDown={handleKeyDown}
             value={query}
             onChange={e => {
               setQuery(e.target.value);
@@ -143,16 +168,20 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           <kbd className={styles.escHint}>ESC</kbd>
         </div>
 
-        <div className={styles.results} ref={listRef}>
+        <div className={styles.results} ref={listRef} id={resultsId} role="listbox" aria-label={t.search.globalPlaceholder}>
           {filteredItems.length === 0 ? (
-            <div className={styles.empty}>{t.common.noData}</div>
+            <div className={styles.empty} role="status">{isLoading ? t.common.loading : error || t.common.noData}</div>
           ) : (
             filteredItems.map((item, index) => (
               <a
-                key={item.id}
+                key={`${item.type}-${item.id}`}
+                id={`${resultsId}-${index}`}
+                role="option"
+                aria-selected={index === activeIndex}
                 href={item.url}
-                className={`${styles.item} ${index === selectedIndex ? styles.selected : ''}`}
+                className={`${styles.item} ${index === activeIndex ? styles.selected : ''}`}
                 onMouseEnter={() => setSelectedIndex(index)}
+                onClick={() => trackVisit(item)}
               >
                 <div className={styles.itemIcon}>
                   <FaviconImage url={item.url} title={item.title} size={24} />

@@ -11,8 +11,16 @@
   min-width: 0;
 }
 
-.engineCardWrapper:hover .deleteCustomButton {
+.engineCardWrapper:hover .deleteCustomButton,
+.engineCardWrapper:focus-within .deleteCustomButton {
   opacity: 1;
+}
+
+.error {
+  margin: 8px 0 0;
+  color: #ef4444;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .deleteCustomButton {

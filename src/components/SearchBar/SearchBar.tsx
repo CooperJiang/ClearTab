@@ -3,6 +3,7 @@ import { getEnabledEngines, getAllEngines } from '../../types';
 import { useSettingsStore, useSearchHistoryStore } from '../../stores';
 import { SearchEngineModal } from '../SearchEngineModal';
 import { useTranslation } from '../../i18n';
+import { buildSearchUrl } from '../../utils/searchUtils';
 import styles from './SearchBar.module.css';
 
 export function SearchBar() {
@@ -35,7 +36,7 @@ export function SearchBar() {
   // 获取启用的搜索引擎
   const enabledEngines = getEnabledEngines(settings.enabledSearchEngines, settings.customSearchEngines);
 
-  const currentEngine = allEngines.find(
+  const currentEngine = enabledEngines.find(
     (e) => e.id === settings.defaultSearchEngine
   ) || enabledEngines[0] || allEngines[0];
 
@@ -44,33 +45,13 @@ export function SearchBar() {
     inputRef.current?.focus();
   }, []);
 
-  // 全局快捷键
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !e.metaKey && !e.ctrlKey) {
-        const activeElement = document.activeElement;
-        if (activeElement?.tagName !== 'INPUT' && activeElement?.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-          inputRef.current?.focus();
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   // 过滤历史记录（根据输入）
   const filteredHistory = useMemo(() => {
     if (!query.trim()) {
       return history.slice(0, 8);
     }
     return history
-      .filter((item) => item.query.toLowerCase().includes(query.toLowerCase()))
+      .filter((item) => item.query.toLowerCase().includes(query.trim().toLowerCase()))
       .slice(0, 8);
   }, [history, query]);
 
@@ -114,7 +95,7 @@ export function SearchBar() {
     if (query.trim()) {
       // 添加到搜索历史
       addHistory(query.trim(), currentEngine.id);
-      window.location.href = currentEngine.url + encodeURIComponent(query.trim());
+      window.location.href = buildSearchUrl(currentEngine.url, query);
     }
   };
 
@@ -124,7 +105,7 @@ export function SearchBar() {
     closeHistory();
     // 直接搜索
     addHistory(historyQuery, currentEngine.id);
-    window.location.href = currentEngine.url + encodeURIComponent(historyQuery);
+    window.location.href = buildSearchUrl(currentEngine.url, historyQuery);
   };
 
   // 删除单条历史记录
@@ -185,12 +166,28 @@ export function SearchBar() {
   };
 
   return (
-    <div className={styles.searchContainer} ref={containerRef} style={containerStyle}>
+    <div
+      className={styles.searchContainer}
+      ref={containerRef}
+      style={containerStyle}
+      onKeyDown={e => {
+        if (!containerRef.current?.contains(e.target as Node)) return;
+        if (e.key === 'Escape' && !e.nativeEvent.isComposing) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (isPanelOpen) closePanel();
+          if (isHistoryOpen) closeHistory();
+          inputRef.current?.focus();
+        }
+      }}
+    >
       <form className={styles.searchBar} onSubmit={handleSearch} style={searchBarStyle}>
         <button
           type="button"
           className={styles.engineButton}
           onClick={togglePanel}
+          aria-label={t.search.engineModal.title}
+          aria-expanded={isPanelOpen}
         >
           {currentEngine.icon && (
             <img src={currentEngine.icon} alt={currentEngine.name} className={styles.currentEngineIcon} />
@@ -198,14 +195,26 @@ export function SearchBar() {
         </button>
         <input
           ref={inputRef}
+          data-search-input
           type="text"
           className={styles.input}
           placeholder={t.search.placeholder}
+          aria-label={t.common.search}
           value={query}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
+          onKeyDown={e => {
+            if (e.nativeEvent.isComposing) {
+              if (e.key === 'Enter') e.preventDefault();
+              return;
+            }
+            if (e.key === 'ArrowDown' && isHistoryOpen && filteredHistory.length > 0) {
+              e.preventDefault();
+              containerRef.current?.querySelector<HTMLButtonElement>('[data-history-item]')?.focus();
+            }
+          }}
         />
-        <button type="submit" className={styles.submitButton}>
+        <button type="submit" className={styles.submitButton} aria-label={t.common.search} disabled={!query.trim()}>
           <svg
             width="20"
             height="20"
@@ -227,6 +236,15 @@ export function SearchBar() {
               key={engine.id}
               className={`${styles.engineItem} ${engine.id === currentEngine.id ? styles.active : ''}`}
               onClick={() => handleEngineSelect(engine.id)}
+              role="button"
+              tabIndex={0}
+              aria-pressed={engine.id === currentEngine.id}
+              onKeyDown={e => {
+                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  handleEngineSelect(engine.id);
+                }
+              }}
             >
               <div className={styles.engineIconWrapper}>
                 {engine.icon && (
@@ -239,6 +257,7 @@ export function SearchBar() {
                   type="button"
                   className={styles.deleteButton}
                   onClick={(e) => handleDeleteEngine(e, engine.id)}
+                  aria-label={`${t.common.delete} ${engine.name}`}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -277,29 +296,45 @@ export function SearchBar() {
             </button>
           </div>
           <div className={styles.historyList}>
-            {filteredHistory.map((item) => (
+            {filteredHistory.map((item, index) => (
               <div
                 key={item.id}
                 className={styles.historyItem}
-                onClick={() => handleHistoryClick(item.query)}
               >
-                <svg
-                  className={styles.historyIcon}
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                <button
+                  type="button"
+                  className={styles.historySelectButton}
+                  data-history-item
+                  onClick={() => handleHistoryClick(item.query)}
+                  onKeyDown={e => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const buttons = containerRef.current?.querySelectorAll<HTMLButtonElement>('[data-history-item]');
+                      const nextIndex = index + (e.key === 'ArrowDown' ? 1 : -1);
+                      if (nextIndex < 0) inputRef.current?.focus();
+                      else buttons?.[Math.min(nextIndex, filteredHistory.length - 1)]?.focus();
+                    }
+                  }}
                 >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                <span className={styles.historyQuery}>{item.query}</span>
+                  <svg
+                    className={styles.historyIcon}
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span className={styles.historyQuery}>{item.query}</span>
+                </button>
                 <button
                   type="button"
                   className={styles.deleteHistoryButton}
                   onClick={(e) => handleDeleteHistory(e, item.id)}
+                  aria-label={`${t.common.delete} ${item.query}`}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>

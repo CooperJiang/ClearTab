@@ -36,6 +36,11 @@ export interface TranslationSchema {
     search: string;
     loading: string;
     noData: string;
+    close: string;
+    saving: string;
+    saveFailed: string;
+    requiredField: string;
+    invalidUrl: string;
   };
 
   // 设置页面
@@ -173,6 +178,7 @@ export interface TranslationSchema {
   // 搜索栏
   search: {
     placeholder: string;
+    globalPlaceholder: string;
     historyTitle: string;
     clearHistory: string;
     engineModal: {
@@ -226,6 +232,7 @@ export interface TranslationSchema {
   // 书签
   bookmarks: {
     title: string;
+    uncategorized: string;
     addBookmark: string;
     editBookmark: string;
     deleteConfirm: string;

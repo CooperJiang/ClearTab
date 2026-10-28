@@ -9,9 +9,9 @@ declare const browser: typeof chrome | undefined;
 
 // 定义类型
 interface BrowserAPINamespace {
-  runtime: typeof chrome.runtime;
-  bookmarks: typeof chrome.bookmarks;
-  history: typeof chrome.history;
+  runtime?: typeof chrome.runtime;
+  bookmarks?: typeof chrome.bookmarks;
+  history?: typeof chrome.history;
 }
 
 /**
@@ -25,10 +25,12 @@ function isFirefox(): boolean {
  * 获取浏览器 API
  * 优先使用 Firefox API，降级到 Chrome API
  */
+const api = isFirefox() ? browser : typeof chrome !== 'undefined' ? chrome : undefined;
+
 export const BrowserAPI: BrowserAPINamespace = {
-  runtime: isFirefox() ? browser!.runtime : chrome.runtime,
-  bookmarks: isFirefox() ? browser!.bookmarks : chrome.bookmarks,
-  history: isFirefox() ? browser!.history : chrome.history,
+  runtime: api?.runtime,
+  bookmarks: api?.bookmarks,
+  history: api?.history,
 };
 
 /**
@@ -36,7 +38,7 @@ export const BrowserAPI: BrowserAPINamespace = {
  * Chrome 和 Firefox 都支持 runtime.lastError
  */
 export function getLastError(): string | undefined {
-  return BrowserAPI.runtime.lastError?.message;
+  return BrowserAPI.runtime?.lastError?.message;
 }
 
 /**
@@ -45,7 +47,7 @@ export function getLastError(): string | undefined {
 export function getBrowserInfo(): { isFirefox: boolean; isChrome: boolean } {
   return {
     isFirefox: isFirefox(),
-    isChrome: !isFirefox(),
+    isChrome: !isFirefox() && typeof chrome !== 'undefined',
   };
 }
 

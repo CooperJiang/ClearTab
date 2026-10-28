@@ -60,8 +60,8 @@ export function isValidUrl(string: string): boolean {
 
 // 确保URL有协议
 export function ensureProtocol(url: string): string {
-  if (!/^https?:\/\//i.test(url)) {
-    return `https://${url}`;
-  }
-  return url;
+  const trimmed = url.trim();
+  const hasProtocol = /^[a-z][a-z\d+.-]*:/i.test(trimmed);
+  const hasPort = /^[^/?#:\s]+:\d+(?:[/?#]|$)/.test(trimmed);
+  return hasProtocol && !hasPort ? trimmed : `https://${trimmed}`;
 }

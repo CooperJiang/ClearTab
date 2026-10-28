@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getFavicon } from '../../utils/faviconService';
 import { generateLetterIcon } from '../../utils/letterIconUtils';
 import styles from './FaviconImage.module.css';
@@ -57,35 +57,27 @@ export function FaviconImage({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  /**
-   * 获取favicon的核心逻辑
-   */
-  const loadFavicon = async () => {
+  useEffect(() => {
+    let active = true;
+    setFavicon(null);
     setIsLoading(true);
     setHasError(false);
 
-    try {
-      const faviconUrl = await getFavicon(url);
-
-      if (faviconUrl) {
+    getFavicon(url)
+      .then(faviconUrl => {
+        if (!active) return;
         setFavicon(faviconUrl);
-      } else {
-        // 获取失败，使用首字母图标
+        setHasError(!faviconUrl);
+      })
+      .catch(error => {
+        if (!active) return;
+        console.error(`[FaviconImage] Error loading favicon for ${url}:`, error);
         setHasError(true);
-      }
-    } catch (error) {
-      console.error(`[FaviconImage] Error loading favicon for ${url}:`, error);
-      setHasError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      })
+      .finally(() => { if (active) setIsLoading(false); });
 
-  /**
-   * 初始化加载
-   */
-  useEffect(() => {
-    loadFavicon();
+    // URL 改变或组件卸载后，旧请求不能覆盖当前图标。
+    return () => { active = false; };
   }, [url]);
 
   /**
@@ -98,7 +90,7 @@ export function FaviconImage({
   };
 
   // 显示备用方案（首字母图标）
-  const fallbackIcon = generateLetterIcon(title, size);
+  const fallbackIcon = useMemo(() => generateLetterIcon(title, size), [title, size]);
 
   return (
     <div

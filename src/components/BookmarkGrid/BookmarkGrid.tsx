@@ -88,7 +88,7 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
 
     // 按搜索词过滤
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.trim().toLowerCase();
       result = result.filter(
         (b) =>
           b.title.toLowerCase().includes(query) ||
@@ -171,7 +171,6 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
     }
 
     const groups = new Map<string, typeof bookmarks>();
-    const categoryOrder = categories.filter(c => c.id !== 'all').map(c => c.id);
 
     for (const bookmark of bookmarks) {
       const catId = bookmark.categoryId;
@@ -181,15 +180,16 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
       groups.get(catId)!.push(bookmark);
     }
 
+    const categoryOrder = [...new Set([...categories.map(c => c.id), ...groups.keys()])];
     // 按分类顺序返回
     return categoryOrder
       .filter(catId => groups.has(catId))
       .map(catId => ({
         categoryId: catId,
-        categoryName: categories.find(c => c.id === catId)?.name || catId,
+        categoryName: catId === 'all' ? t.bookmarks.uncategorized : categories.find(c => c.id === catId)?.name || t.bookmarks.uncategorized,
         bookmarks: groups.get(catId)!,
       }));
-  }, [bookmarks, categories, activeCategory, searchQuery, settings.enableBookmarkGrouping]);
+  }, [bookmarks, categories, activeCategory, searchQuery, settings.enableBookmarkGrouping, t.bookmarks.uncategorized]);
 
   const handleBookmarkClick = (id: string) => {
     // 仅在本地模式下跟踪访问计数
@@ -225,21 +225,18 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
       },
     ];
 
-    // 仅在本地模式下添加分类字段
-    if (mode === 'local') {
+    if (mode === 'local' || !editingBookmark) {
       fields.push({
         key: 'categoryId',
         label: t.bookmarks.form.category,
         type: 'select',
-        options: categories
-          .filter((c) => c.id !== 'all')
-          .map((c) => ({ value: c.id, label: c.name })),
+        options: categories.map((c) => ({ value: c.id, label: c.name })),
         required: true,
       });
     }
 
     return fields;
-  }, [mode, t.bookmarks.form.title, t.bookmarks.form.url, t.bookmarks.form.category, categories]);
+  }, [mode, editingBookmark, t.bookmarks.form.title, t.bookmarks.form.url, t.bookmarks.form.category, categories]);
 
   // 分类表单字段
   const categoryFields: EditModalField[] = [
@@ -252,22 +249,17 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
     },
   ];
 
-  const handleAddBookmark = (values: Record<string, string>) => {
-    const url = values.url.startsWith('http') ? values.url : `https://${values.url}`;
-    const categoryId = mode === 'local' ? (values.categoryId || 'dev') : undefined;
-
-    // 使用适配器的 addBookmark 方法，同时传递分类信息
-    adapterAddBookmark(values.title, url, categoryId);
+  const handleAddBookmark = async (values: Record<string, string>) => {
+    await adapterAddBookmark(values.title, values.url, values.categoryId);
   };
 
-  const handleEditBookmark = (values: Record<string, string>) => {
+  const handleEditBookmark = async (values: Record<string, string>) => {
     if (!editingBookmark) return;
-    const url = values.url.startsWith('http') ? values.url : `https://${values.url}`;
 
     // 使用适配器的 updateBookmark 方法
-    adapterUpdateBookmark(editingBookmark, {
+    await adapterUpdateBookmark(editingBookmark, {
       title: values.title,
-      url,
+      url: values.url,
     });
 
     // 在本地模式下，还需要更新分类
@@ -324,10 +316,10 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
     adapterDeleteBookmark(bookmarkId);
   };
 
-  const handleAddCategory = (values: Record<string, string>) => {
+  const handleAddCategory = async (values: Record<string, string>) => {
     if (mode === 'chrome') {
       // Chrome 模式：调用适配器创建文件夹
-      addChromeCategory(values.name);
+      await addChromeCategory(values.name);
     } else {
       // 本地模式
       const newCategory = {
@@ -339,12 +331,12 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
     }
   };
 
-  const handleEditCategory = (values: Record<string, string>) => {
+  const handleEditCategory = async (values: Record<string, string>) => {
     if (!editingCategory) return;
 
     if (mode === 'chrome') {
       // Chrome 模式：调用适配器的重命名方法
-      adapterRenameCategory(editingCategory, values.name);
+      await adapterRenameCategory(editingCategory, values.name);
     } else {
       // 本地模式：使用 store 的 updateCategory 方法
       const state = useBookmarkStore.getState();
@@ -970,7 +962,7 @@ export function BookmarkGrid({ showCategories = true }: { showCategories?: boole
         onClose={() => setIsAddModalOpen(false)}
         title={t.bookmarks.addBookmark}
         fields={bookmarkFields}
-        initialValues={{ categoryId: activeCategory === 'all' ? 'dev' : activeCategory }}
+        initialValues={{ categoryId: activeCategory }}
         onSave={handleAddBookmark}
       />
 

@@ -30,7 +30,7 @@ interface BookmarkState {
   setCategories: (categories: Category[]) => void;
 }
 
-// 当修改 MOCK_BOOKMARKS 数据时，增加这个版本号
+// 记录首次初始化所使用的示例数据版本，不用于覆盖用户数据。
 const MOCK_DATA_VERSION = 4;
 
 export const useBookmarkStore = create<BookmarkState>()(
@@ -82,6 +82,7 @@ export const useBookmarkStore = create<BookmarkState>()(
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
           bookmarks: state.bookmarks.filter((b) => b.categoryId !== id),
+          activeCategory: state.activeCategory === id ? 'all' : state.activeCategory,
         })),
 
       reorderCategories: (categories) =>
@@ -109,19 +110,19 @@ export const useBookmarkStore = create<BookmarkState>()(
 
       initializeWithMockData: () => {
         const state = get();
-        // 如果 mock 数据版本更新了，或者没有初始化过且没有书签，则加载 mock 数据
-        if (state.mockDataVersion < MOCK_DATA_VERSION || (!state.isInitialized && state.bookmarks.length === 0)) {
-          set({
+        // 示例数据只用于首次启动，版本更新不能覆盖用户的数据。
+        if (state.isInitialized) return;
+        set({
+          ...(state.bookmarks.length === 0 ? {
             bookmarks: MOCK_BOOKMARKS,
-            categories: DEFAULT_CATEGORIES, // 同时更新分类
-            isInitialized: true,
-            mockDataVersion: MOCK_DATA_VERSION,
-          });
-        }
+          } : {}),
+          isInitialized: true,
+          mockDataVersion: MOCK_DATA_VERSION,
+        });
       },
 
       // 云同步相关
-      setBookmarks: (bookmarks) => set({ bookmarks }),
+      setBookmarks: (bookmarks) => set({ bookmarks, isInitialized: true }),
       
       setCategories: (categories) => set({ categories }),
     }),

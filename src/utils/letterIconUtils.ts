@@ -47,7 +47,8 @@ function getFirstCharacter(text: string): string {
   if (!text) return '?';
   // 移除所有空格，取第一个非空字符
   const trimmed = text.replace(/\s/g, '');
-  return trimmed[0].toUpperCase();
+  // 按 Unicode 码点取首字符，避免截断 emoji 或扩展汉字的代理对
+  return (Array.from(trimmed)[0] || '?').toUpperCase();
 }
 
 /**
@@ -58,7 +59,10 @@ function getFirstCharacter(text: string): string {
  * @returns SVG Data URL
  */
 export function generateLetterIcon(text: string, size = 64): string {
-  const char = getFirstCharacter(text);
+  const char = getFirstCharacter(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
   const [r, g, b] = generateColorFromText(text);
   const bgColor = `rgb(${r}, ${g}, ${b})`;
 

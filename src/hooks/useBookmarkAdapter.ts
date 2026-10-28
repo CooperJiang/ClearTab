@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { createContext, createElement, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useBookmarkStore } from '../stores/useBookmarkStore';
 import { useBookmarkMetadataStore } from '../stores/useBookmarkMetadataStore';
@@ -18,16 +18,21 @@ interface AdaptedBookmark extends Bookmark {
  * 统一书签数据适配器
  * 根据模式自动切换 Chrome 书签或本地书签
  */
-export function useBookmarkAdapter() {
+function useBookmarkData() {
   const { settings, updateSettings } = useSettingsStore();
   const localStore = useBookmarkStore();
   const metadataStore = useBookmarkMetadataStore();
 
-  const [mode, setMode] = useState<BookmarkMode>('chrome');
-  const [bookmarks, setBookmarks] = useState<AdaptedBookmark[]>([]);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const mode: BookmarkMode = settings.bookmarkMode === 'local' || !ChromeBookmarkService.isAvailable() ? 'local' : 'chrome';
+  const [chromeBookmarks, setBookmarks] = useState<AdaptedBookmark[]>([]);
+  const [chromeCategories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const bookmarks = useMemo<AdaptedBookmark[]>(() => mode === 'chrome' ? chromeBookmarks : localStore.bookmarks.map(b => ({
+    ...b,
+    source: 'local' as const,
+  })), [mode, chromeBookmarks, localStore.bookmarks]);
+  const categories = mode === 'chrome' ? chromeCategories : localStore.categories;
 
   // 获取 Chrome 书签模式下的数据
   const loadChromeBookmarks = useCallback(async () => {
@@ -129,50 +134,27 @@ export function useBookmarkAdapter() {
     }
   }, [metadataStore]);
 
-  // 获取本地书签模式下的数据
-  const loadLocalBookmarks = useCallback(() => {
-    setIsLoading(true);
-    const localBookmarks = localStore.bookmarks.map((b) => ({
-      ...b,
-      source: 'local' as const,
-    }));
-    setBookmarks(localBookmarks);
-    setCategories(localStore.categories);
-    setError(null);
-    setIsLoading(false);
-  }, [localStore.bookmarks, localStore.categories]);
-
-  // 根据模式加载数据
+  // 全应用共用一次加载，并响应浏览器中发生的书签变化。
   useEffect(() => {
-    const bookmarkMode = (settings.bookmarkMode as BookmarkMode) || 'chrome';
-    setMode(bookmarkMode);
+    if (mode !== 'chrome') return;
+    loadChromeBookmarks();
+    return ChromeBookmarkService.onChanged(() => { void loadChromeBookmarks(); });
+  }, [mode, loadChromeBookmarks]);
 
-    if (bookmarkMode === 'chrome') {
-      loadChromeBookmarks();
-    } else {
-      loadLocalBookmarks();
+  // 删除分类或切换模式后，不能继续筛选一个不存在的分类。
+  useEffect(() => {
+    if (mode === 'chrome' && isLoading) return;
+    if (!categories.some(category => category.id === localStore.activeCategory)) {
+      localStore.setActiveCategory('all');
     }
-  }, [settings.bookmarkMode, loadChromeBookmarks, loadLocalBookmarks]);
-
-  // 本地模式下，实时响应 store 的更新
-  useEffect(() => {
-    if (mode !== 'local') return;
-
-    setBookmarks(
-      localStore.bookmarks.map((b) => ({
-        ...b,
-        source: 'local' as const,
-      }))
-    );
-    setCategories(localStore.categories);
-  }, [mode, localStore.bookmarks, localStore.categories]);
+  }, [mode, isLoading, categories, localStore.activeCategory, localStore.setActiveCategory]);
 
   // 添加书签
   const addBookmark = useCallback(
     async (title: string, url: string, categoryId?: string) => {
       try {
         if (mode === 'chrome') {
-          const chromeBookmark = await ChromeBookmarkService.addBookmark(title, url);
+          const chromeBookmark = await ChromeBookmarkService.addBookmark(title, url, categoryId && categoryId !== 'all' ? categoryId : undefined);
           if (chromeBookmark.id) {
             metadataStore.setMetadata(chromeBookmark.id, {
               chromeId: chromeBookmark.id,
@@ -187,7 +169,7 @@ export function useBookmarkAdapter() {
             id: `bm-${Date.now()}`,
             title,
             url,
-            categoryId: categoryId || 'dev',
+            categoryId: categoryId || 'all',
             color: '#8b5cf6',
             createdAt: Date.now(),
             visitCount: 0,
@@ -195,6 +177,7 @@ export function useBookmarkAdapter() {
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to add bookmark');
+        throw err;
       }
     },
     [mode, metadataStore, localStore, loadChromeBookmarks]
@@ -239,6 +222,7 @@ export function useBookmarkAdapter() {
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to update bookmark');
+        throw err;
       }
     },
     [bookmarks, metadataStore, localStore, loadChromeBookmarks]
@@ -291,6 +275,7 @@ export function useBookmarkAdapter() {
         await loadChromeBookmarks();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to rename category');
+        throw err;
       }
     },
     [mode, loadChromeBookmarks]
@@ -320,6 +305,7 @@ export function useBookmarkAdapter() {
         await loadChromeBookmarks();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create category');
+        throw err;
       }
     },
     [mode, loadChromeBookmarks]
@@ -360,20 +346,22 @@ export function useBookmarkAdapter() {
           return;
         }
 
-        // 获取第一个可移动分类的 parentId 作为目标父节点
-        const firstCategory = await ChromeBookmarkService.getBookmark(movableCategories[0]);
-        const parentId = firstCategory.parentId || '1';
-
-        // 不能移动到根节点下
-        if (rootFolderIds.includes(parentId)) {
-          console.log('Categories are in root folder, reordering within:', parentId);
+        // 只在原父文件夹内排序，不能把不同层级的文件夹移动到一起。
+        const folders = await Promise.all(movableCategories.map(id => ChromeBookmarkService.getBookmark(id)));
+        const foldersByParent = new Map<string, string[]>();
+        for (const folder of folders) {
+          if (!folder.parentId) continue;
+          const siblings = foldersByParent.get(folder.parentId) || [];
+          siblings.push(folder.id);
+          foldersByParent.set(folder.parentId, siblings);
         }
 
-        console.log('Reordering', movableCategories.length, 'categories in parent:', parentId);
-
-        for (let i = 0; i < movableCategories.length; i++) {
-          const categoryId = movableCategories[i];
-          await ChromeBookmarkService.moveBookmark(categoryId, parentId, i);
+        for (const [parentId, folderIds] of foldersByParent) {
+          const children = await ChromeBookmarkService.getChildren(parentId);
+          const slots = children.flatMap((child, index) => folderIds.includes(child.id) ? [index] : []);
+          for (let i = 0; i < folderIds.length; i++) {
+            await ChromeBookmarkService.moveBookmark(folderIds[i], parentId, slots[i]);
+          }
         }
         await loadChromeBookmarks();
       } catch (err) {
@@ -436,8 +424,8 @@ export function useBookmarkAdapter() {
     mode,
     bookmarks,
     categories,
-    isLoading,
-    error,
+    isLoading: mode === 'chrome' && isLoading,
+    error: mode === 'chrome' ? error : null,
     addBookmark,
     deleteBookmark,
     updateBookmark,
@@ -453,4 +441,17 @@ export function useBookmarkAdapter() {
     reorderBookmarks,
     getAllTags: metadataStore.getAllTags,
   };
+}
+
+const BookmarkContext = createContext<ReturnType<typeof useBookmarkData> | null>(null);
+
+export function BookmarkProvider({ children }: { children: ReactNode }) {
+  const value = useBookmarkData();
+  return createElement(BookmarkContext.Provider, { value }, children);
+}
+
+export function useBookmarkAdapter() {
+  const bookmarks = useContext(BookmarkContext);
+  if (!bookmarks) throw new Error('useBookmarkAdapter must be used within BookmarkProvider');
+  return bookmarks;
 }

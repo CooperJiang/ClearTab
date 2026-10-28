@@ -10,7 +10,7 @@ import GitHubSyncService, { type GitHubConfig } from './services/githubSyncServi
 import type { SyncData } from './types/sync';
 
 // 监听扩展安装
-BrowserAPI.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
+BrowserAPI.runtime?.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
   if (details.reason === 'install') {
     console.log('Extension installed');
   } else if (details.reason === 'update') {
@@ -19,7 +19,7 @@ BrowserAPI.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDet
 });
 
 // 监听来自内容脚本或 popup 的消息
-BrowserAPI.runtime.onMessage.addListener((
+BrowserAPI.runtime?.onMessage.addListener((
   request: unknown,
   _sender: chrome.runtime.MessageSender,
   sendResponse: (response?: unknown) => void

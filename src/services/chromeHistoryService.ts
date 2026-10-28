@@ -29,7 +29,8 @@ class HistoryService {
    * @param startTime 开始时间，默认为过去 7 天
    */
   async getRecentHistory(maxResults: number = 20, startTime?: number): Promise<HistoryItem[]> {
-    if (!this.isAvailable()) {
+    const historyApi = BrowserAPI.history;
+    if (!historyApi) {
       console.warn('Chrome History API is not available');
       return [];
     }
@@ -38,7 +39,7 @@ class HistoryService {
     const defaultStartTime = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
     return new Promise((resolve) => {
-      BrowserAPI.history.search(
+      historyApi.search(
         {
           text: '', // 空字符串匹配所有
           startTime: startTime || defaultStartTime,
@@ -102,13 +103,14 @@ class HistoryService {
    * @param maxResults 最大返回数量
    */
   async searchHistory(query: string, maxResults: number = 20): Promise<HistoryItem[]> {
-    if (!this.isAvailable()) {
+    const historyApi = BrowserAPI.history;
+    if (!historyApi) {
       console.warn('Chrome History API is not available');
       return [];
     }
 
     return new Promise((resolve) => {
-      BrowserAPI.history.search(
+      historyApi.search(
         {
           text: query,
           maxResults,
@@ -141,12 +143,13 @@ class HistoryService {
    * @param url 要查询的 URL
    */
   async getVisits(url: string): Promise<chrome.history.VisitItem[]> {
-    if (!this.isAvailable()) {
+    const historyApi = BrowserAPI.history;
+    if (!historyApi) {
       return [];
     }
 
     return new Promise((resolve) => {
-      BrowserAPI.history.getVisits({ url }, (visits: chrome.history.VisitItem[]) => {
+      historyApi.getVisits({ url }, (visits: chrome.history.VisitItem[]) => {
         if (getLastError()) {
           console.error('History API error:', getLastError());
           resolve([]);

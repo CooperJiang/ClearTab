@@ -17,6 +17,11 @@ export const enUS: TranslationSchema = {
     search: 'Search',
     loading: 'Loading...',
     noData: 'No data',
+    close: 'Close',
+    saving: 'Saving…',
+    saveFailed: 'Could not save. Please try again.',
+    requiredField: 'Please enter or select {field}',
+    invalidUrl: 'Please enter a valid URL',
   },
 
   settings: {
@@ -151,7 +156,8 @@ export const enUS: TranslationSchema = {
   },
 
   search: {
-    placeholder: 'Search or enter URL',
+    globalPlaceholder: 'Search bookmarks and quick links',
+    placeholder: 'Search the web',
     historyTitle: 'Search history',
     clearHistory: 'Clear',
     engineModal: {
@@ -178,13 +184,14 @@ export const enUS: TranslationSchema = {
 
   bookmarks: {
     title: 'Bookmarks',
+    uncategorized: 'Uncategorized',
     addBookmark: 'Add bookmark',
     editBookmark: 'Edit bookmark',
     deleteConfirm: 'Are you sure you want to delete this bookmark?',
     addCategory: 'Add category',
     editCategory: 'Edit category',
     deleteCategoryTitle: 'Delete category',
-    deleteCategoryConfirmChrome: 'This category has {count} bookmarks. Deleting will remove the folder and its bookmarks from Chrome. Continue?',
+    deleteCategoryConfirmChrome: 'This folder, all its bookmarks, and its subfolders will be removed from the browser. They cannot be restored from this app\'s trash. Continue?',
     deleteCategoryConfirmLocal: 'This category has {count} bookmarks. Deleting will move them to trash. Continue?',
     form: {
       title: 'Title',

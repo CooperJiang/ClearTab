@@ -350,8 +350,18 @@
   transition: var(--transition);
 }
 
-.historyItem:hover {
+.historyItem:hover,
+.historyItem:focus-within {
   background: var(--bg-hover);
+}
+
+.historySelectButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 
 .historyIcon {
@@ -381,7 +391,8 @@
   flex-shrink: 0;
 }
 
-.historyItem:hover .deleteHistoryButton {
+.historyItem:hover .deleteHistoryButton,
+.historyItem:focus-within .deleteHistoryButton {
   opacity: 1;
 }
 

@@ -42,7 +42,7 @@ export function QuickLinks() {
     const newLink = {
       id: `ql-${Date.now()}`,
       title: values.title,
-      url: values.url.startsWith('http') ? values.url : `https://${values.url}`,
+      url: values.url,
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
       order: quickLinks.length,
     };
@@ -53,7 +53,7 @@ export function QuickLinks() {
     if (!editingLink) return;
     updateQuickLink(editingLink, {
       title: values.title,
-      url: values.url.startsWith('http') ? values.url : `https://${values.url}`,
+      url: values.url,
     });
   };
 

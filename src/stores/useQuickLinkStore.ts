@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { QuickLink } from '../types';
 import { MOCK_QUICKLINKS } from '../utils/mockData';
 
-// 当修改 MOCK_QUICKLINKS 数据时，增加这个版本号
+// 记录首次初始化所使用的示例数据版本，不用于覆盖用户数据。
 const MOCK_DATA_VERSION = 3;
 
 interface QuickLinkState {
@@ -50,18 +50,19 @@ export const useQuickLinkStore = create<QuickLinkState>()(
 
       initializeWithMockData: () => {
         const state = get();
-        // 如果 mock 数据版本更新了，或者没有初始化过且没有快捷链接，则加载 mock 数据
-        if (state.mockDataVersion < MOCK_DATA_VERSION || (!state.isInitialized && state.quickLinks.length === 0)) {
-          set({
+        // 示例数据只用于首次启动，版本更新不能覆盖用户的数据。
+        if (state.isInitialized) return;
+        set({
+          ...(state.quickLinks.length === 0 ? {
             quickLinks: MOCK_QUICKLINKS,
-            isInitialized: true,
-            mockDataVersion: MOCK_DATA_VERSION,
-          });
-        }
+          } : {}),
+          isInitialized: true,
+          mockDataVersion: MOCK_DATA_VERSION,
+        });
       },
 
       // 云同步相关
-      setQuickLinks: (links) => set({ quickLinks: links }),
+      setQuickLinks: (links) => set({ quickLinks: links, isInitialized: true }),
     }),
     {
       name: 'newtab-quicklinks',

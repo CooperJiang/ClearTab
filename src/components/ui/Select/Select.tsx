@@ -8,6 +8,8 @@ export interface SelectOption {
 }
 
 interface SelectProps {
+  id?: string;
+  disabled?: boolean;
   value: string;
   options: SelectOption[];
   onChange: (value: string) => void;
@@ -15,7 +17,7 @@ interface SelectProps {
   width?: number | string;
 }
 
-export function Select({ value, options, onChange, placeholder, width }: SelectProps) {
+export function Select({ id, disabled, value, options, onChange, placeholder, width }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0, dropUp: false });
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -87,10 +89,21 @@ export function Select({ value, options, onChange, placeholder, width }: SelectP
   return (
     <div className={styles.container} style={containerStyle}>
       <button
+        id={id}
+        disabled={disabled}
         ref={triggerRef}
         type="button"
         className={`${styles.trigger} ${isOpen ? styles.open : ''}`}
         onClick={handleToggle}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        onKeyDown={(e) => {
+          if (e.key === 'Escape' && isOpen) {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(false);
+          }
+        }}
       >
         <span className={styles.selectedLabel}>
           {selectedOption?.label || placeholder || 'Select...'}
@@ -118,11 +131,23 @@ export function Select({ value, options, onChange, placeholder, width }: SelectP
             width: position.width,
           }}
           onMouseDown={(e) => e.stopPropagation()}
+          role="listbox"
+          aria-labelledby={id}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOpen(false);
+              triggerRef.current?.focus();
+            }
+          }}
         >
           {options.map((option) => (
             <button
               key={option.value}
               type="button"
+              role="option"
+              aria-selected={option.value === value}
               className={`${styles.option} ${option.value === value ? styles.selected : ''}`}
               onClick={() => handleSelect(option.value)}
             >

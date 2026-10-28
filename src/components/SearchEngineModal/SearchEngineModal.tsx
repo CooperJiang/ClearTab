@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal } from '../Modal';
-import { getAllEngines, type SearchEngine } from '../../types';
+import { DEFAULT_ENABLED_ENGINE_IDS, getAllEngines, type SearchEngine } from '../../types';
 import { useSettingsStore } from '../../stores';
 import { useTranslation } from '../../i18n';
 import styles from './SearchEngineModal.module.css';
@@ -17,6 +17,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
   const { settings, updateSettings } = useSettingsStore();
   const { t } = useTranslation();
   const [customUrl, setCustomUrl] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const minEnginesText = t.search.engineModal.minEngines.replace('{count}', String(MIN_ENGINES));
   const maxEnginesText = t.search.engineModal.maxEngines.replace('{count}', String(MAX_ENGINES));
   const selectionHint = t.search.engineModal.selectionHint
@@ -49,10 +50,12 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
   };
 
   const handleAddCustom = () => {
-    if (!customUrl.trim()) return;
+    const template = customUrl.trim();
+    if (!template) return;
 
     // 验证URL格式
-    if (!customUrl.includes('%s') && !customUrl.includes('=')) {
+    if (!template.includes('%s') && !template.includes('=')) {
+      setError(t.search.engineModal.customPlaceholder);
       return;
     }
 
@@ -62,17 +65,22 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
     // 从URL提取域名作为名称
     let name = t.search.engineModal.customDefaultName;
     try {
-      const url = new URL(customUrl.includes('%s') ? customUrl.replace('%s', 'test') : customUrl);
+      const url = new URL(template.replaceAll('%s', 'test'));
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+        setError(t.common.invalidUrl);
+        return;
+      }
       name = url.hostname.replace('www.', '').split('.')[0];
       name = name.charAt(0).toUpperCase() + name.slice(1);
     } catch {
-      // 使用默认名称
+      setError(t.common.invalidUrl);
+      return;
     }
 
     const customEngine: SearchEngine = {
       id: customId,
       name,
-      url: customUrl.includes('%s') ? customUrl.replace('%s', '') : customUrl,
+      url: template,
       icon: undefined,
     };
 
@@ -92,6 +100,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
     }
 
     setCustomUrl('');
+    setError(null);
   };
 
   // 删除自定义引擎
@@ -100,10 +109,11 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
     const newCustomEngines = settings.customSearchEngines.filter(e => e.id !== engineId);
     // 从启用列表中移除
     const newEnabledIds = settings.enabledSearchEngines.filter(id => id !== engineId);
+    if (newEnabledIds.length === 0) newEnabledIds.push(DEFAULT_ENABLED_ENGINE_IDS[0]);
 
     // 如果删除的是当前默认引擎，切换到第一个启用的引擎
     let newDefault = settings.defaultSearchEngine;
-    if (settings.defaultSearchEngine === engineId && newEnabledIds.length > 0) {
+    if (!newEnabledIds.includes(settings.defaultSearchEngine)) {
       newDefault = newEnabledIds[0];
     }
 
@@ -197,7 +207,15 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
               className={styles.customInput}
               placeholder={t.search.engineModal.customPlaceholder}
               value={customUrl}
-              onChange={(e) => setCustomUrl(e.target.value)}
+              onChange={(e) => { setCustomUrl(e.target.value); setError(null); }}
+              aria-label={t.search.engineModal.customTitle}
+              aria-invalid={!!error}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  handleAddCustom();
+                }
+              }}
             />
           </div>
           <button
@@ -208,6 +226,7 @@ export function SearchEngineModal({ isOpen, onClose }: SearchEngineModalProps) {
             {t.common.save}
           </button>
         </div>
+        {error && <p className={styles.error} role="alert">{error}</p>}
       </div>
     </Modal>
   );

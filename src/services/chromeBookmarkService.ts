@@ -275,7 +275,8 @@ class BookmarkService {
   static onChanged(
     callback: (changeType: string, id: string, changeInfo: unknown) => void
   ) {
-    if (!BrowserAPI?.bookmarks) return;
+    const bookmarksApi = BrowserAPI.bookmarks;
+    if (!bookmarksApi) return;
 
     const handlers = {
       onCreated: (id: string, bookmark: chrome.bookmarks.BookmarkTreeNode) => {
@@ -292,17 +293,17 @@ class BookmarkService {
       },
     };
 
-    BrowserAPI.bookmarks.onCreated.addListener(handlers.onCreated);
-    BrowserAPI.bookmarks.onRemoved.addListener(handlers.onRemoved);
-    BrowserAPI.bookmarks.onChanged.addListener(handlers.onChanged);
-    BrowserAPI.bookmarks.onMoved.addListener(handlers.onMoved);
+    bookmarksApi.onCreated.addListener(handlers.onCreated);
+    bookmarksApi.onRemoved.addListener(handlers.onRemoved);
+    bookmarksApi.onChanged.addListener(handlers.onChanged);
+    bookmarksApi.onMoved.addListener(handlers.onMoved);
 
     // 返回取消监听的函数
     return () => {
-      BrowserAPI.bookmarks.onCreated.removeListener(handlers.onCreated);
-      BrowserAPI.bookmarks.onRemoved.removeListener(handlers.onRemoved);
-      BrowserAPI.bookmarks.onChanged.removeListener(handlers.onChanged);
-      BrowserAPI.bookmarks.onMoved.removeListener(handlers.onMoved);
+      bookmarksApi.onCreated.removeListener(handlers.onCreated);
+      bookmarksApi.onRemoved.removeListener(handlers.onRemoved);
+      bookmarksApi.onChanged.removeListener(handlers.onChanged);
+      bookmarksApi.onMoved.removeListener(handlers.onMoved);
     };
   }
 

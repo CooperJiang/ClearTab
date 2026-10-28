@@ -1,9 +1,11 @@
 import { useState, useRef, useCallback, useEffect, type ReactNode } from 'react';
-import { useBookmarkStore, useQuickLinkStore, useRecentVisitsStore, useSettingsStore } from '../../stores';
+import { useBookmarkStore, useQuickLinkStore, useRecentVisitsStore, useSettingsStore, useTrashStore } from '../../stores';
+import { useBookmarkAdapter } from '../../hooks/useBookmarkAdapter';
+import { useRecentVisits } from '../../hooks/useRecentVisits';
 import { useTranslation } from '../../i18n';
 import { FaviconImage } from '../FaviconImage';
 import { Tooltip } from '../Tooltip';
-import { ContextMenu, type ContextMenuItem } from '../ui';
+import { ConfirmDialog, ContextMenu, type ContextMenuItem } from '../ui';
 import { EditModal, type EditModalField } from '../EditModal';
 import { ChevronLeft } from 'lucide-react';
 import styles from './Sidebar.module.css';
@@ -54,7 +56,6 @@ export function Sidebar() {
 
   const { settings } = useSettingsStore();
   const {
-    categories,
     activeCategory,
     setActiveCategory,
     reorderCategories,
@@ -63,16 +64,28 @@ export function Sidebar() {
     deleteCategory,
   } = useBookmarkStore();
   const {
+    mode,
+    bookmarks,
+    categories,
+    moveBookmarkToCategory,
+    reorderCategories: reorderBrowserCategories,
+    renameCategory,
+    deleteChromeCategoryFolder,
+  } = useBookmarkAdapter();
+  const {
     quickLinks,
     reorderQuickLinks,
     updateQuickLink,
     deleteQuickLink,
   } = useQuickLinkStore();
-  const { customVisits, removeVisit } = useRecentVisitsStore();
+  const { removeVisit, addVisit } = useRecentVisitsStore();
+  const addToTrash = useTrashStore(state => state.addToTrash);
+  const { recentVisits } = useRecentVisits({ limit: Math.min(5, settings.recentVisitsCount), enabled: settings.showRecentVisits });
 
   // 编辑弹窗状态
   const [editingQuickLink, setEditingQuickLink] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
 
   // 拖拽状态
   const [catDragIndex, setCatDragIndex] = useState<number | null>(null);
@@ -161,7 +174,11 @@ export function Sidebar() {
         const parsed = JSON.parse(jsonData);
         if (parsed.type === 'bookmark' && parsed.id) {
           const targetCategoryId = categories[dropIndex].id;
-          updateBookmark(parsed.id, { categoryId: targetCategoryId });
+          if (mode === 'chrome') {
+            if (targetCategoryId !== 'all') void moveBookmarkToCategory(parsed.id, targetCategoryId);
+          } else {
+            updateBookmark(parsed.id, { categoryId: targetCategoryId });
+          }
           setActiveCategory(targetCategoryId);
           setCatDragIndex(null);
           setCatOverIndex(null);
@@ -176,7 +193,7 @@ export function Sidebar() {
     }
 
     // 分类排序
-    if (catDragIndex === null || catDragIndex === dropIndex) {
+    if (catDragIndex === null || catDragIndex === dropIndex || categories[dropIndex].id === 'all') {
       setCatDragIndex(null);
       setCatOverIndex(null);
       return;
@@ -185,11 +202,15 @@ export function Sidebar() {
     const newCategories = [...categories];
     const [draggedItem] = newCategories.splice(catDragIndex, 1);
     newCategories.splice(dropIndex, 0, draggedItem);
-    reorderCategories(newCategories);
+    if (mode === 'chrome') {
+      void reorderBrowserCategories(newCategories.filter(category => category.id !== 'all').map(category => category.id));
+    } else {
+      reorderCategories(newCategories);
+    }
 
     setCatDragIndex(null);
     setCatOverIndex(null);
-  }, [categories, catDragIndex, reorderCategories, updateBookmark, setActiveCategory]);
+  }, [categories, catDragIndex, mode, moveBookmarkToCategory, reorderBrowserCategories, reorderCategories, updateBookmark, setActiveCategory]);
 
   const handleCatDragEnd = useCallback(() => {
     setCatDragIndex(null);
@@ -367,15 +388,10 @@ export function Sidebar() {
           </svg>
         ),
         danger: true,
-        onClick: () => {
-          deleteCategory(categoryId);
-          if (activeCategory === categoryId) {
-            setActiveCategory('all');
-          }
-        },
+        onClick: () => setDeletingCategory(categoryId),
       },
     ];
-  }, [deleteCategory, activeCategory, setActiveCategory]);
+  }, [t.common.edit, t.common.delete]);
 
   // 编辑表单字段
   const quickLinkFields: EditModalField[] = [
@@ -394,7 +410,7 @@ export function Sidebar() {
     if (!editingQuickLink) return;
     updateQuickLink(editingQuickLink, {
       title: values.title,
-      url: values.url.startsWith('http') ? values.url : `https://${values.url}`,
+      url: values.url,
     });
   };
 
@@ -404,17 +420,15 @@ export function Sidebar() {
     }
   };
 
-  const handleEditCategory = (values: Record<string, string>) => {
+  const handleEditCategory = async (values: Record<string, string>) => {
     if (!editingCategory) return;
-    updateCategory(editingCategory, { name: values.name });
+    if (mode === 'chrome') await renameCategory(editingCategory, values.name);
+    else updateCategory(editingCategory, { name: values.name });
   };
 
   const handleDeleteCategory = () => {
     if (editingCategory) {
-      deleteCategory(editingCategory);
-      if (activeCategory === editingCategory) {
-        setActiveCategory('all');
-      }
+      setDeletingCategory(editingCategory);
     }
   };
 
@@ -450,6 +464,9 @@ export function Sidebar() {
                   <ConditionalTooltip show={isCollapsed} content={link.title}>
                     <a
                         href={link.url}
+                        onClick={() => {
+                          if (settings.recentVisitsMode === 'custom') addVisit(link.url, link.title);
+                        }}
                         className={`${styles.navItem} ${styles.iconOnly} ${quickLinkDragIndex === index ? styles.dragging : ''} ${quickLinkOverIndex === index ? styles.dragOver : ''}`}
                         draggable
                         onDragStart={(e) => handleQuickLinkDragStart(e, index, link.id)}
@@ -472,8 +489,8 @@ export function Sidebar() {
           <section className={styles.section}>
             <h2 className={`${styles.sectionTitle} ${isCollapsed ? styles.collapsed : ''}`}>{t.sidebar.recentVisits}</h2>
             <div className={styles.list}>
-              {customVisits.slice(0, 5).map((item) => (
-                <ContextMenu key={item.id} items={getRecentVisitContextMenuItems(item.id, item.url)}>
+              {recentVisits.map((item) => (
+                <ContextMenu key={item.id} items={settings.recentVisitsMode === 'custom' ? getRecentVisitContextMenuItems(item.id, item.url) : getRecentVisitContextMenuItems(item.id, item.url).slice(0, 1)}>
                   <ConditionalTooltip show={isCollapsed} content={item.title}>
                     <a href={item.url} className={`${styles.navItem} ${styles.iconOnly}`}>
                         <FaviconImage url={item.url} title={item.title} color="#64748b" size={18} />
@@ -556,6 +573,35 @@ export function Sidebar() {
         initialValues={currentCategory ? { name: currentCategory.name } : {}}
         onSave={handleEditCategory}
         onDelete={handleDeleteCategory}
+      />
+      <ConfirmDialog
+        isOpen={deletingCategory !== null}
+        onClose={() => setDeletingCategory(null)}
+        title={t.bookmarks.deleteCategoryTitle}
+        message={(mode === 'chrome' ? t.bookmarks.deleteCategoryConfirmChrome : t.bookmarks.deleteCategoryConfirmLocal)
+          .replace('{count}', String(bookmarks.filter(bookmark => bookmark.categoryId === deletingCategory).length))}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        danger
+        onConfirm={() => {
+          if (!deletingCategory) return;
+          if (mode === 'chrome') {
+            void deleteChromeCategoryFolder(deletingCategory);
+          } else {
+            const category = categories.find(item => item.id === deletingCategory);
+            if (category) {
+              addToTrash({
+                id: `trash-${Date.now()}`,
+                type: 'category',
+                data: category,
+                relatedBookmarks: bookmarks.filter(bookmark => bookmark.categoryId === deletingCategory),
+                deletedAt: Date.now(),
+                mode,
+              });
+              deleteCategory(deletingCategory);
+            }
+          }
+        }}
       />
     </aside>
   );

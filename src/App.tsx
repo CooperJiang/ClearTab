@@ -21,6 +21,7 @@ import {
   HelpDrawer,
 } from './components';
 import { useSettingsStore, useBookmarkStore, useQuickLinkStore } from './stores';
+import { BookmarkProvider, useBookmarkAdapter } from './hooks/useBookmarkAdapter';
 import type { Settings } from './types';
 import { fetchRandomWallpaper } from './utils/wallpaperApi';
 import { I18nProvider, useTranslation } from './i18n';
@@ -126,7 +127,9 @@ function App() {
 
   return (
     <I18nProvider locale={settings.locale} onLocaleChange={handleLocaleChange}>
-      <AppContent />
+      <BookmarkProvider>
+        <AppContent />
+      </BookmarkProvider>
     </I18nProvider>
   );
 }
@@ -181,8 +184,7 @@ function SidebarLayout({ settings, animClass, showAnimation }: LayoutProps) {
 function AppContent() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useSettingsStore();
-  const addBookmark = useBookmarkStore((state) => state.addBookmark);
-  const categories = useBookmarkStore((state) => state.categories);
+  const { addBookmark, categories } = useBookmarkAdapter();
   const initializeBookmarks = useBookmarkStore((state) => state.initializeWithMockData);
   const initializeQuickLinks = useQuickLinkStore((state) => state.initializeWithMockData);
   const quickLinks = useQuickLinkStore((state) => state.quickLinks);
@@ -216,6 +218,8 @@ function AppContent() {
 
   // 全局快捷键
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.defaultPrevented || e.isComposing) return;
+    if (document.activeElement?.closest('[role="dialog"]')) return;
     // 检查是否在输入框中
     const isInputFocused =
       document.activeElement instanceof HTMLInputElement ||
@@ -269,10 +273,12 @@ function AppContent() {
     // 以下快捷键在输入框中不生效
     if (isInputFocused) return;
 
-    // /: 打开全局搜索
-    if (e.key === '/') {
+    // /: 聚焦网页搜索；搜索栏隐藏时打开全局搜索。
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
-      setIsSearchOpen(true);
+      const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
+      if (searchInput) searchInput.focus();
+      else setIsSearchOpen(true);
       return;
     }
 
@@ -346,22 +352,13 @@ function AppContent() {
   // 书签字段定义
   const bookmarkFields: EditModalField[] = [
     { key: 'title', label: t.bookmarks.form.title, type: 'text', required: true },
-    { key: 'url', label: t.bookmarks.form.url, type: 'text', required: true },
+    { key: 'url', label: t.bookmarks.form.url, type: 'url', required: true },
     { key: 'categoryId', label: t.bookmarks.form.category, type: 'select', required: true, options: categories.map(c => ({ value: c.id, label: c.name })) },
   ];
 
   // 添加书签处理
-  const handleAddBookmark = async (values: Record<string, unknown>) => {
-    addBookmark({
-      id: `bookmark-${Date.now()}`,
-      title: values.title as string,
-      url: values.url as string,
-      color: '#6366f1',
-      categoryId: values.categoryId as string,
-      createdAt: Date.now(),
-      visitCount: 0,
-    });
-    setIsAddBookmarkOpen(false);
+  const handleAddBookmark = async (values: Record<string, string>) => {
+    await addBookmark(values.title, values.url, values.categoryId);
   };
 
   return (
@@ -393,7 +390,7 @@ function AppContent() {
         onClose={() => setIsAddBookmarkOpen(false)}
         title={t.bookmarks.addBookmark}
         fields={bookmarkFields}
-        initialValues={{ categoryId: 'dev' }}
+        initialValues={{ categoryId: 'all' }}
         onSave={handleAddBookmark}
       />
       <ToastContainer />

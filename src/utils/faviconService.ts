@@ -12,6 +12,7 @@ import { extractDomain } from './networkUtils';
  */
 
 const TIMEOUT_MS = 5000; // 5秒超时
+const pendingRequests = new Map<string, Promise<string | null>>();
 
 /**
  * 获取Favicon
@@ -33,26 +34,28 @@ export async function getFavicon(bookmarkUrl: string): Promise<string | null> {
     return null;
   }
 
+  if (!navigator.onLine) return null;
+  const pending = pendingRequests.get(domain);
+  if (pending) return pending;
+
   // 3️⃣ 请求Google Favicon并转成base64
   const googleUrl = `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
 
-  try {
-    const base64 = await fetchImageAsBase64(googleUrl, TIMEOUT_MS);
-    if (base64) {
-      // 检查是否是有效的图片（不是Google的默认地球图标）
-      // Google默认图标很小，有效favicon的base64通常较长
-      if (base64.length > 500) {
+  const request = (async () => {
+    try {
+      const base64 = await fetchImageAsBase64(googleUrl, TIMEOUT_MS);
+      if (base64 && base64.length > 500) {
         store.cacheFavicon(domain, base64);
         return base64;
       }
+      store.markAsFailed(domain);
+      return null;
+    } finally {
+      pendingRequests.delete(domain);
     }
-  } catch {
-    // 请求失败
-  }
-
-  // 4️⃣ 失败：标记，7天后可重试
-  store.markAsFailed(domain);
-  return null;
+  })();
+  pendingRequests.set(domain, request);
+  return request;
 }
 
 /**
